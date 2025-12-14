@@ -3,6 +3,7 @@ package com.setec.online_survey.features.auth;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.domain.UserRole;
 import com.setec.online_survey.features.auth.dto.*;
+import com.setec.online_survey.features.mail.EmailVerificationTokenService;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.security.CustomUserDetails;
 import com.setec.online_survey.security.TokenGenerator;
@@ -28,14 +29,19 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final DaoAuthenticationProvider authenticationProvider;
     private final TokenGenerator tokenGenerator;
-    private final JwtDecoder jwtRefreshTokenDecoder;  // this one uses refresh public key
+    private final JwtDecoder jwtRefreshTokenDecoder;
+    private final EmailVerificationTokenService emailVerificationTokenService;
 
     @Transactional
     @Override
     public void register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmailAndEmailVerifiedTrue(request.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
+        if(!request.password().equals(request.confirmPassword())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Confirm password miss match");
         }
 
         User user = new User();
@@ -45,12 +51,15 @@ public class AuthServiceImpl implements AuthService {
 
         user.setIsDeleted(false);
         user.setAccountNonExpired(true);
-        user.setAccountNonLocked(true);
+        user.setAccountNonLocked(false);
         user.setCredentialsNonExpired(true);
+        user.setEmailVerified(false);
 
         user.setRole(UserRole.ROLE_USER);
 
         userRepository.save(user);
+
+        emailVerificationTokenService.generate(user);
     }
 
     @Override

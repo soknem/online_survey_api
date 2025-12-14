@@ -1,6 +1,4 @@
 spring:
-#  main:
-#    allow-circular-references: true
   application:
     name: online_survey
 #  servlet: # this is for file upload
@@ -11,7 +9,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
-#    url: jdbc:oracle:thin:@localhost:1521/orc
     url: jdbc:oracle:thin:@${DB_HOST}:${DB_PORT}/${DB_NAME}
   jpa:
     show-sql: true
@@ -22,6 +19,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.OracleDialect
+
   mail:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
@@ -31,10 +29,26 @@ spring:
       mail:
         smtp:
           auth: true
-        starttls:
-          enable: true
+          starttls:
+            enable: true
+            required: true
   profiles:
     active: dev
+
+springdoc:
+  swagger-ui:
+    path: /ui
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: debug
+    org.springframework.web: debug
+    org.springframework.security: debug
+    com.online_survey.survey: debug
+    org.springframework.mail: debug
+    org.hibernate.engine.internal.Profiler: debug
 
 # This is for the access token
 ACCESS_TOKEN_PRIVATE_KEY_PATH: ${ACT_PRIVATE}

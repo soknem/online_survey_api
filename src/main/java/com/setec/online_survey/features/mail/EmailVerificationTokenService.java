@@ -12,6 +12,8 @@ public interface EmailVerificationTokenService {
 
     void generate(User user);
 
+    void sendMail(String to, String subject, String content);
+
     boolean isExpired(VerificationToken token);
 
     void resend(String username);

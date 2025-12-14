@@ -7,7 +7,7 @@ import lombok.Builder;
 public record EmailVerifyRequest(
 
         @NotBlank(message = "Username is required")
-        String username,
+        String email,
 
         @NotBlank(message = "Token is required")
         String token

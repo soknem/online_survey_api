@@ -9,7 +9,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
@@ -35,7 +35,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     public void verify(EmailVerifyRequest emailVerifyRequest) {
 
         // check if user attempts to verify exists or not
-        User foundUser = userRepository.findUserByEmail(emailVerifyRequest.username())
+        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndAccountNonLockedTrue(emailVerifyRequest.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with corresponding verification token"));
 
         VerificationToken foundToken = emailVerificationTokenRepository.getByToken(emailVerifyRequest.token())
@@ -44,6 +44,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
         if (this.isUsersToken(foundToken, foundUser)) {
             if (this.isExpired(foundToken)) {
                 foundUser.setEmailVerified(true);
+                foundUser.setAccountNonLocked(false);
                 userRepository.save(foundUser);
                 emailVerificationTokenRepository.deleteByUser(foundUser);
                 return;
@@ -57,7 +58,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     public void resend(String username) {
 
         // check if user attempts to verify exists or not
-        User foundUser = userRepository.findUserByEmail(username)
+        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndAccountNonLockedTrue(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unsuccessfully creation of confirmation link!"));
 
         emailVerificationTokenRepository.deleteByUser(foundUser);
@@ -72,19 +73,19 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     @Override
     public void generate(User user) {
 
-        LocalTime expiration = LocalTime.now().plusMinutes(1);
-
+        // --- 1. Business Logic: Token Generation & Persistence ---
+        LocalTime expiration = LocalTime.now().plusMinutes(5);
         VerificationToken emailVerificationToken = new VerificationToken();
 
         emailVerificationToken.setToken(RandomUtil.generate6Digits());
         emailVerificationToken.setExpiration(expiration);
         emailVerificationToken.setUser(user);
 
+        user.setTokenDate(LocalDate.now());
+
         emailVerificationTokenRepository.save(emailVerificationToken);
 
-        // after saved information into database, mail will be started to send
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
+        // --- 2. View Logic: Prepare Context & Render Email Content ---
 
         // Prepare Thymeleaf context
         Context context = new Context();
@@ -92,25 +93,55 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 
         log.info("Verification Code: {}", emailVerificationToken.getToken());
 
-
         // Render the email content using the Thymeleaf template
+        // 'templateEngine' and 'templateEngine.process()' are assumed to be defined/available
         String emailContent = templateEngine.process("email/verification-code.html", context);
         log.info("Rendered email content: {}", emailContent);
-        log.info("Context Variables: {}",context);
 
         try {
-            mimeMessageHelper.setTo(user.getEmail());
-            mimeMessageHelper.setSubject("Account Verification");
-            mimeMessageHelper.setText(emailContent,true);
+            String recipientEmail = user.getEmail();
+            String subject = "Account Verification";
+
+            sendMail(recipientEmail, subject, emailContent);
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong sending the email", e);
+        }
+
+        userRepository.save(user);
+    }
+
+    /**
+     * Sends an email using the provided recipient, subject, and HTML content.
+     *
+     * @param to The recipient's email address.
+     * @param subject The subject line of the email.
+     * @param content The HTML content of the email body.
+     */
+    @Override
+    public void sendMail(String to, String subject, String content) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8"); // 'true' for multipart, 'UTF-8' for encoding
+
+            mimeMessageHelper.setTo(to);
+            mimeMessageHelper.setSubject(subject);
+            mimeMessageHelper.setText(content, true); // 'true' indicates the content is HTML
+
             javaMailSender.send(mimeMessage);
+
+            log.info("Email sent successfully to: {}", to);
+
         } catch (MessagingException e) {
-            log.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            log.error("Failed to send email to {}: {}", to, e.getMessage());
+            throw new RuntimeException("Error sending email", e);
         }
     }
 
     @Override
     public boolean isExpired(VerificationToken token) {
+
         return !token.getExpiration().isBefore(LocalTime.now());
     }
 

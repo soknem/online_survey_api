@@ -52,7 +52,7 @@ public class SecurityConfig {
 //        provider.setPasswordEncoder(passwordEncoder());
 //        return provider;
 //    }
-    //version: 3.5
+    //version: 3.2
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -76,9 +76,11 @@ public class SecurityConfig {
                 .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             );
+
+
 
         return http.build();
     }

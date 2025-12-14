@@ -12,6 +12,5 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest request);
 
-    // Refresh token logic – called from controller
     AuthResponse refresh(RefreshTokenRequest request);
 }

@@ -44,6 +44,8 @@ public class User extends Auditable<String> {
 
     private Boolean emailVerified;
 
+    private LocalDate tokenDate =null;
+
     private boolean isAccountNonExpired = true;
     private boolean isAccountNonLocked = true;
     private boolean isCredentialsNonExpired = true;
@@ -52,7 +54,7 @@ public class User extends Auditable<String> {
     // --- Role is now an Enum ---
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private UserRole role = UserRole.ROLE_RESPONDENT; // Default role
+    private UserRole role = UserRole.ROLE_USER; // Default role
     // ---------------------------
 
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)

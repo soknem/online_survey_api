@@ -38,22 +38,14 @@ public class DataInit {
             
             // --- 2. Create a standard Respondent user (Optional, for testing) ---
             User respondentUser = new User();
-            respondentUser.setEmail("respondent@setec.com");
+            respondentUser.setEmail("user@setec.com");
             respondentUser.setLastName("User");
             respondentUser.setFirstName("Test");
-            respondentUser.setRole(UserRole.ROLE_RESPONDENT);
+            respondentUser.setRole(UserRole.ROLE_USER);
             respondentUser.setPassword(passwordEncoder.encode("123456"));
             userRepository.save(respondentUser);
             
-            
-            // --- 3. Create a user with the USER role (from your original snippet) ---
-            User genericUser = new User();
-            genericUser.setEmail("sokname@gmail.com");
-            genericUser.setLastName("soknem");
-            genericUser.setFirstName("pov");
-            genericUser.setRole(UserRole.ROLE_USER);
-            genericUser.setPassword(passwordEncoder.encode("123456"));
-            userRepository.save(genericUser);
+
 
         }
     }

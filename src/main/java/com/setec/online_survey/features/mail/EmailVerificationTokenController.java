@@ -27,7 +27,7 @@ public class EmailVerificationTokenController {
 
     @PostMapping("/token")
     BasedMessage resendToken(@Valid @RequestBody EmailResendTokenRequest emailResendTokenRequest) {
-        emailVerificationTokenService.resend(emailResendTokenRequest.username());
+        emailVerificationTokenService.resend(emailResendTokenRequest.email());
         return new BasedMessage("New confirmation link has been sent, check your emails");
     }
 
