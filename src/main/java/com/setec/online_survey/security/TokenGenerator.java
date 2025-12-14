@@ -1,6 +1,7 @@
 package com.setec.online_survey.security;
 
 import com.setec.online_survey.features.auth.dto.AuthResponse;
+import com.setec.online_survey.features.auth.dto.TokenPair;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
@@ -26,7 +27,8 @@ public class TokenGenerator {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("SA_ONLINE_SURVEY")
                 .issuedAt(now)
-                .expiresAt(now.plus(3, ChronoUnit.DAYS)) // you said 3 days
+                // --- MODIFIED: Reduced to 15 minutes for security ---
+                .expiresAt(now.plus(15, ChronoUnit.MINUTES))
                 .subject(userDetails.getUsername())
                 .claim("roles", userDetails.getRoles())
                 .build();
@@ -38,25 +40,27 @@ public class TokenGenerator {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("SA_ONLINE_SURVEY")
                 .issuedAt(now)
-                .expiresAt(now.plus(30, ChronoUnit.DAYS)) // usually longer
+                // --- MODIFIED: Set to 3 days ---
+                .expiresAt(now.plus(3, ChronoUnit.DAYS))
                 .subject(userDetails.getUsername())
                 .build();
         return jwtRefreshTokenEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    public AuthResponse generateTokens(Authentication authentication) {
+    public TokenPair generateTokens(Authentication authentication) { // <--- MODIFIED RETURN TYPE
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = createAccessToken(userDetails);
 
         String refreshToken;
         if (authentication.getCredentials() instanceof Jwt jwt && isRefreshTokenReusable(jwt)) {
-            refreshToken = jwt.getTokenValue(); // token rotation: reuse old one
+            refreshToken = jwt.getTokenValue();
         } else {
             refreshToken = createRefreshToken(userDetails);
         }
 
-        return AuthResponse.builder()
+        // Return the internal TokenPair
+        return TokenPair.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -66,6 +70,7 @@ public class TokenGenerator {
         Instant now = Instant.now();
         Instant expiresAt = jwt.getExpiresAt();
         if (expiresAt == null) return false;
-        return Duration.between(now, expiresAt).toDays() >= 7; // reuse only if >= 7 days left
+        // Reuse if refresh token has >= 24 hours left (adjust logic as needed)
+        return Duration.between(now, expiresAt).toHours() >= 24;
     }
 }

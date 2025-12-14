@@ -26,8 +26,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.*;
+// NEW IMPORTS
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -45,45 +48,54 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public DaoAuthenticationProvider authenticationProvider() {
-//        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-//        provider.setUserDetailsService(userDetailsService);
-//        provider.setPasswordEncoder(passwordEncoder());
-//        return provider;
-//    }
-    //version: 3.2
-
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());  // This method STILL EXISTS
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
+    }
+
+    // --- NEW BEAN: Bearer Token Resolver for HTTP-ONLY COOKIE ---
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        // Priority 1: Check for 'access_token' cookie
+        CookieRequestHeaderTokenResolver resolver = new CookieRequestHeaderTokenResolver("access_token");
+
+        // Priority 2 (Fallback): Check standard Authorization header
+        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+        delegate.setAllowFormEncodedBodyParameter(false);
+        delegate.setAllowUriQueryParameter(false); // Typically keep false for security
+        resolver.setDelegate(delegate);
+
+        return resolver;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToUserConverter))
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-            )
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().authenticated()
-            );
-
-
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToUserConverter))
+                        // --- MODIFIED: Use the new resolver to check cookies ---
+                        .bearerTokenResolver(bearerTokenResolver())
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // Allow auth endpoints, swagger, and static resources
+                        .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().authenticated()
+                );
 
         return http.build();
     }
+
+    // --- JWT Encoder/Decoder Beans remain the same ---
 
     @Bean
     @Qualifier("jwtRefreshTokenEncoder")
@@ -114,15 +126,11 @@ public class SecurityConfig {
     }
 
 
-
-
     @Bean
     @Primary
     JwtDecoder jwtAccessTokenDecoder() {
         return NimbusJwtDecoder.withPublicKey(keyUtil.getAccessTokenPublicKey()).build();
     }
-
-
 
 
     @Bean
@@ -132,6 +140,4 @@ public class SecurityConfig {
         provider.setJwtAuthenticationConverter(jwtToUserConverter);
         return provider;
     }
-
-
 }

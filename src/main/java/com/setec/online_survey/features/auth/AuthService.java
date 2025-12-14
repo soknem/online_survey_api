@@ -1,16 +1,20 @@
 package com.setec.online_survey.features.auth;
 
-import com.setec.online_survey.features.auth.dto.AuthResponse;
-import com.setec.online_survey.features.auth.dto.LoginRequest;
-import com.setec.online_survey.features.auth.dto.RefreshTokenRequest;
-import com.setec.online_survey.features.auth.dto.RegisterRequest;
+import com.setec.online_survey.features.auth.dto.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface AuthService {
+    // Helper method to set cookies
+    void setTokensAsCookies(TokenPair tokenPair, HttpServletResponse response);
+
     @Transactional
     void register(RegisterRequest request);
 
-    AuthResponse login(LoginRequest request);
+    // MODIFIED: Pass HttpServletResponse to set cookies
+    AuthResponse login(LoginRequest request, HttpServletResponse response);
 
-    AuthResponse refresh(RefreshTokenRequest request);
+    // MODIFIED: Pass HttpServletResponse to set cookies
+    AuthResponse refresh(HttpServletRequest request, HttpServletResponse response);
 }
