@@ -1,10 +1,10 @@
-package com.setec.online_survey.features.mail.dto;
+package com.setec.online_survey.features.register_email_verify.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 @Builder
-public record EmailVerifyRequest(
+public record RegisterEmailVerifyRequest(
 
         @NotBlank(message = "Username is required")
         String email,

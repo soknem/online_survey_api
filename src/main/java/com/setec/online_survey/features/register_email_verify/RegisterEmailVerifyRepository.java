@@ -1,4 +1,4 @@
-package com.setec.online_survey.features.mail;
+package com.setec.online_survey.features.register_email_verify;
 
 
 
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
-public interface VerificationTokenRepository extends CrudRepository<VerificationToken, Long> {
+public interface RegisterEmailVerifyRepository extends CrudRepository<VerificationToken, Long> {
 
     Optional<VerificationToken> getByToken(String token);
 

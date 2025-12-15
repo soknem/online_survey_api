@@ -3,7 +3,7 @@ package com.setec.online_survey.features.auth;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.domain.UserRole;
 import com.setec.online_survey.features.auth.dto.*;
-import com.setec.online_survey.features.mail.EmailVerificationTokenService;
+import com.setec.online_survey.features.send_mail.SendMailService;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.security.CustomUserDetails;
 import com.setec.online_survey.security.TokenGenerator;
@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final DaoAuthenticationProvider authenticationProvider;
     private final TokenGenerator tokenGenerator;
     private final JwtDecoder jwtRefreshTokenDecoder;
-    private final EmailVerificationTokenService emailVerificationTokenService;
+    private final SendMailService sendMailService;
 
     private String getCookieValue(HttpServletRequest request, String name) {
         if (request.getCookies() == null) {
@@ -100,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        emailVerificationTokenService.generate(user);
+        sendMailService.generateRegisterOtp(user);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.setec.online_survey.features.test;
 
-import com.setec.online_survey.features.mail.EmailVerificationTokenService;
+import com.setec.online_survey.features.send_mail.SendMailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class TestController {
 
-    private final EmailVerificationTokenService emailVerificationTokenService;
+    private final SendMailService sendMailService;
 
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER')")
@@ -31,6 +31,6 @@ public class TestController {
 
     @GetMapping("/send-mail")
     public void sendMail(@RequestParam String to, @RequestParam String subject, @RequestParam String content){
-        emailVerificationTokenService.sendMail(to,subject,content);
+        //sendMailService.sendMail(to,subject,content);
     }
 }
