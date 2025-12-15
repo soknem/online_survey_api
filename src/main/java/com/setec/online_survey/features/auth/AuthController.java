@@ -12,6 +12,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -22,6 +23,10 @@ public class AuthController {
 
     @GetMapping("/me")
     public UserProfileResponse getMyProfile(Authentication authentication) {
+
+        if(authentication==null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized");
+        }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
@@ -58,7 +63,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
@@ -68,7 +73,7 @@ public class AuthController {
                 .secure(true)
                 .path("/api/v1/auth/refresh")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 

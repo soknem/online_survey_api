@@ -57,8 +57,8 @@ public class AuthServiceImpl implements AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(900)
-                .sameSite("Strict")
+                .maxAge(30)
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
 
@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
                 .secure(true)
                 .path("/api/v1/auth/refresh")
                 .maxAge(259200)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
     }
@@ -91,9 +91,9 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
 
         user.setIsDeleted(false);
-        user.setAccountNonExpired(true);
-        user.setAccountNonLocked(false);
-        user.setCredentialsNonExpired(true);
+        user.setIsAccountNonExpired(true);
+        user.setIsAccountNonLocked(false);
+        user.setIsCredentialsNonExpired(true);
         user.setEmailVerified(false);
 
         user.setRole(UserRole.ROLE_USER);

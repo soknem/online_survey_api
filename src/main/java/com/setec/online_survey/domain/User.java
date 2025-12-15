@@ -46,9 +46,9 @@ public class User extends Auditable<String> {
 
     private LocalDate tokenDate =null;
 
-    private boolean isAccountNonExpired = true;
-    private boolean isAccountNonLocked = true;
-    private boolean isCredentialsNonExpired = true;
+    private Boolean isAccountNonExpired = true;
+    private Boolean isAccountNonLocked = true;
+    private Boolean isCredentialsNonExpired = true;
     private Boolean isDeleted = false;
 
     // --- Role is now an Enum ---

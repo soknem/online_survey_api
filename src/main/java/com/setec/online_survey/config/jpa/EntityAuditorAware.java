@@ -17,7 +17,7 @@ public class EntityAuditorAware implements AuditorAware<String> {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails user)) {
-            return Optional.of("KHOTIXS");
+            return Optional.of("SA_Admin");
         }
 
         return Optional.of(user.getUsername());

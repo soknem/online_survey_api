@@ -42,8 +42,8 @@ public class CustomUserDetails implements UserDetails {
         return Set.of(user.getRole().getAuthority().replace("ROLE_", ""));
     }
 
-    @Override public boolean isAccountNonExpired() { return user.isAccountNonExpired(); }
-    @Override public boolean isAccountNonLocked() { return user.isAccountNonLocked(); }
-    @Override public boolean isCredentialsNonExpired() { return user.isCredentialsNonExpired(); }
+    @Override public boolean isAccountNonExpired() { return user.getIsAccountNonExpired(); }
+    @Override public boolean isAccountNonLocked() { return user.getIsAccountNonLocked(); }
+    @Override public boolean isCredentialsNonExpired() { return user.getIsCredentialsNonExpired(); }
     @Override public boolean isEnabled() { return !user.getIsDeleted(); }
 }

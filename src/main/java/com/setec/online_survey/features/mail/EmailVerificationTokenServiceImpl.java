@@ -35,7 +35,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     public void verify(EmailVerifyRequest emailVerifyRequest) {
 
         // check if user attempts to verify exists or not
-        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndAccountNonLockedTrue(emailVerifyRequest.email())
+        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndIsAccountNonLockedFalse(emailVerifyRequest.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with corresponding verification token"));
 
         VerificationToken foundToken = emailVerificationTokenRepository.getByToken(emailVerifyRequest.token())
@@ -44,7 +44,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
         if (this.isUsersToken(foundToken, foundUser)) {
             if (this.isExpired(foundToken)) {
                 foundUser.setEmailVerified(true);
-                foundUser.setAccountNonLocked(false);
+                foundUser.setIsAccountNonLocked(true);
                 userRepository.save(foundUser);
                 emailVerificationTokenRepository.deleteByUser(foundUser);
                 return;
@@ -58,7 +58,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     public void resend(String username) {
 
         // check if user attempts to verify exists or not
-        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndAccountNonLockedTrue(username)
+        User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndIsAccountNonLockedFalse(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unsuccessfully creation of confirmation link!"));
 
         emailVerificationTokenRepository.deleteByUser(foundUser);
@@ -74,7 +74,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     public void generate(User user) {
 
         // --- 1. Business Logic: Token Generation & Persistence ---
-        LocalTime expiration = LocalTime.now().plusMinutes(5);
+        LocalTime expiration = LocalTime.now().plusMinutes(1    );
         VerificationToken emailVerificationToken = new VerificationToken();
 
         emailVerificationToken.setToken(RandomUtil.generate6Digits());
@@ -100,7 +100,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 
         try {
             String recipientEmail = user.getEmail();
-            String subject = "Account Verification";
+            String subject = "Online Survey Email Verification";
 
             sendMail(recipientEmail, subject, emailContent);
 
