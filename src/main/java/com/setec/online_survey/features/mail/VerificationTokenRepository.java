@@ -18,6 +18,7 @@ public interface VerificationTokenRepository extends CrudRepository<Verification
 
     Optional<VerificationToken> getByToken(String token);
 
+    Optional<VerificationToken> findByUser(User user);
     @Transactional
     @Modifying
     @Query("DELETE FROM VerificationToken e where e.user=:user")

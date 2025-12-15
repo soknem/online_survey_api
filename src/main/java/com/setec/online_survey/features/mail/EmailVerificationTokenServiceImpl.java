@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.context.Context;
@@ -30,25 +31,35 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     private final UserRepository userRepository;
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void verify(EmailVerifyRequest emailVerifyRequest) {
 
-        // check if user attempts to verify exists or not
+        // 1. Find the user attempting to verify (by email)
         User foundUser = userRepository.findUserByEmailAndEmailVerifiedFalseAndIsAccountNonLockedFalse(emailVerifyRequest.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with corresponding verification token"));
 
-        VerificationToken foundToken = emailVerificationTokenRepository.getByToken(emailVerifyRequest.token())
+        VerificationToken foundToken = emailVerificationTokenRepository.findByUser(foundUser)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verification token is invalid"));
 
-        if (this.isUsersToken(foundToken, foundUser)) {
-            if (this.isExpired(foundToken)) {
-                foundUser.setEmailVerified(true);
-                foundUser.setIsAccountNonLocked(true);
-                userRepository.save(foundUser);
-                emailVerificationTokenRepository.deleteByUser(foundUser);
-                return;
-            }
+        // 3. COMPARE: Use passwordEncoder.matches() to verify the plain token against the stored hash
+        boolean tokenMatches = passwordEncoder.matches(
+                emailVerifyRequest.token(),
+                foundToken.getToken()
+        );
+
+        if (!tokenMatches) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Verification token is invalid");
+        }
+
+        // 4. Check expiration and complete verification
+        if (this.isExpired(foundToken)) {
+            foundUser.setEmailVerified(true);
+            foundUser.setIsAccountNonLocked(true);
+            userRepository.save(foundUser);
+            emailVerificationTokenRepository.deleteByUser(foundUser);
+            return;
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Verification token has expired");
@@ -77,7 +88,9 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
         LocalTime expiration = LocalTime.now().plusMinutes(1    );
         VerificationToken emailVerificationToken = new VerificationToken();
 
-        emailVerificationToken.setToken(RandomUtil.generate6Digits());
+        String token =(RandomUtil.generate6Digits());
+
+        emailVerificationToken.setToken(passwordEncoder.encode(token));
         emailVerificationToken.setExpiration(expiration);
         emailVerificationToken.setUser(user);
 
@@ -89,9 +102,9 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 
         // Prepare Thymeleaf context
         Context context = new Context();
-        context.setVariable("verificationCode", emailVerificationToken.getToken());
+        context.setVariable("verificationCode", token);
 
-        log.info("Verification Code: {}", emailVerificationToken.getToken());
+        log.info("Verification Code: {}", token);
 
         // Render the email content using the Thymeleaf template
         // 'templateEngine' and 'templateEngine.process()' are assumed to be defined/available
