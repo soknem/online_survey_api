@@ -17,11 +17,12 @@ services:
       - ./init-scripts:/opt/oracle/scripts/setup
     shm_size: '1gb'
     healthcheck:
-      test: ["CMD-SHELL", "echo 'exit' | sqlplus -L -S sa/sa@localhost:1521/orcl | grep -q 'Connected to'"]
+      # This version is more reliable: it checks if 'sa' can connect to the default service
+      test: [ "CMD-SHELL", "echo 'exit' | sqlplus -L -S sa/sa@localhost:1521/FREEPDB1 | grep -q 'Connected to'" ]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 90s
+      retries: 5
+      start_period: 60s
 
   # --- Spring Boot API Service ---
   online_survey:
