@@ -17,11 +17,11 @@ services:
       - ./init-scripts:/opt/oracle/scripts/setup
     shm_size: '2gb'
     healthcheck:
-      # Simple and fast: Check if the port 1521 is open
-      test: [ "CMD-SHELL", "nc -z localhost 1521 || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 15
+      # tnsping is built-in and doesn't need extra tools or passwords
+      test: ["CMD-SHELL", "tnsping localhost:1521 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
       start_period: 60s
 
   # --- Spring Boot API Service ---
