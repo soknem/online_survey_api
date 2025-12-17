@@ -1,21 +1,67 @@
 services:
+  # --- Oracle Database Service ---
+  oracle-db:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: oracle-free
+    restart: always
+    networks:
+      - survey-network
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PWD=YourRootPassword123
+      - ORACLE_CHARACTERSET=AL32UTF8
+      - ORACLE_PDB=orcl
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./init-scripts:/opt/oracle/scripts/setup
+    shm_size: '1gb'
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'exit' | sqlplus -L -S sa/sa@localhost:1521/orcl | grep -q 'Connected to'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
+  # --- Spring Boot API Service ---
   online_survey:
     container_name: 'sa-api'
     build:
-      context: .
+      context: ../sa_online_survey_api # Path to your Dockerfile
       dockerfile: Dockerfile
     restart: always
+    networks:
+      - survey-network
+    depends_on:
+      oracle-db:
+        condition: service_healthy
     environment:
       - TZ=Asia/Bangkok
+      # OVERRIDE application-dev.yml values for Docker context
+      - DB_HOST=oracle-db
+      - DB_PORT=1521
+      - DB_NAME=orcl
+      - DB_USERNAME=sa
+      - DB_PASSWORD=sa
+      # File paths inside the container (mapped via volumes below)
+      - ACT_PRIVATE=/keys/access-token-private.key
+      - ACT_PUBLIC=/keys/access-token-public.key
+      - RET_PRIVATE=/keys/refresh-token-private.key
+      - RET_PUBLIC=/keys/refresh-token-public.key
+      # Mail (keeping your gmail settings)
+      - MAIL_USERNAME=sokname56@gmail.com
+      - MAIL_PASSWORD=tcps zgvu rnsf klrf
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_HOST_PORT=587
     ports:
-      - '8080:8080'
+      - '8080:8888' # Maps External 8080 to your App's 8888
     volumes:
       - '/home/media:/home/media'
-      - '/home/keys:/keys'
-    healthcheck:
-      # If using Actuator, the path is /actuator/health
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s # Give Spring Boot time to start before checking
+      - './access-refresh-token-keys:/keys' # Maps your keys folder to /keys
+
+networks:
+  survey-network:
+    driver: bridge
+
+volumes:
+  oracle_data:
