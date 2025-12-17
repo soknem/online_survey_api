@@ -11,18 +11,18 @@ services:
     environment:
       - ORACLE_PWD=YourRootPassword123
       - ORACLE_CHARACTERSET=AL32UTF8
-      - ORACLE_PDB=FREEPDB1  # Changed from 'orcl' to match your logs
+      - ORACLE_PDB=FREEPDB1
     volumes:
       - oracle_data:/opt/oracle/oradata
       - ./init-scripts:/opt/oracle/scripts/setup
-    shm_size: '2gb' # Increased slightly for better stability
+    shm_size: '2gb'
     healthcheck:
-      # Testing connection specifically to FREEPDB1 using the 'sa' user
-      test: [ "CMD-SHELL", "echo 'exit' | sqlplus -L -S sa/sa@localhost:1521/FREEPDB1 | grep -q 'Connected to'" ]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 120s # Oracle needs time to run your init-scripts
+      # Simple and fast: Check if the port 1521 is open
+      test: [ "CMD-SHELL", "nc -z localhost 1521 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
 
   # --- Spring Boot API Service ---
   online_survey:
