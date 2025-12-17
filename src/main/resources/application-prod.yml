@@ -1,0 +1,16 @@
+DB_USERNAME: sa
+DB_PASSWORD: sa
+DB_HOST: localhost
+DB_PORT: 1521
+DB_NAME: orcl
+
+ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
+ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
+# This is for the refresh token
+RET_PRIVATE: access-refresh-token-keys/refresh-token-private.key
+RET_PUBLIC: access-refresh-token-keys/refresh-token-public.key
+
+MAIL_USERNAME: sokname56@gmail.com
+MAIL_PASSWORD: tcps zgvu rnsf klrf
+MAIL_HOST: smtp.gmail.com
+MAIL_HOST_PORT: 587
