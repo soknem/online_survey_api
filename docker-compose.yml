@@ -11,24 +11,24 @@ services:
     environment:
       - ORACLE_PWD=YourRootPassword123
       - ORACLE_CHARACTERSET=AL32UTF8
-      - ORACLE_PDB=orcl
+      - ORACLE_PDB=FREEPDB1  # Changed from 'orcl' to match your logs
     volumes:
       - oracle_data:/opt/oracle/oradata
       - ./init-scripts:/opt/oracle/scripts/setup
-    shm_size: '1gb'
+    shm_size: '2gb' # Increased slightly for better stability
     healthcheck:
-      # This version is more reliable: it checks if 'sa' can connect to the default service
+      # Testing connection specifically to FREEPDB1 using the 'sa' user
       test: [ "CMD-SHELL", "echo 'exit' | sqlplus -L -S sa/sa@localhost:1521/FREEPDB1 | grep -q 'Connected to'" ]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 10
+      start_period: 120s # Oracle needs time to run your init-scripts
 
   # --- Spring Boot API Service ---
   online_survey:
     container_name: 'sa-api'
     build:
-      context: ../sa_online_survey_api # Path to your Dockerfile
+      context: ../sa_online_survey_api
       dockerfile: Dockerfile
     restart: always
     networks:
@@ -38,27 +38,27 @@ services:
         condition: service_healthy
     environment:
       - TZ=Asia/Bangkok
-      # OVERRIDE application-dev.yml values for Docker context
+      # These must match the ${} variables in your application.yml
       - DB_HOST=oracle-db
       - DB_PORT=1521
-      - DB_NAME=orcl
+      - DB_NAME=FREEPDB1
       - DB_USERNAME=sa
       - DB_PASSWORD=sa
-      # File paths inside the container (mapped via volumes below)
+      # Security Key Paths
       - ACT_PRIVATE=/keys/access-token-private.key
       - ACT_PUBLIC=/keys/access-token-public.key
       - RET_PRIVATE=/keys/refresh-token-private.key
       - RET_PUBLIC=/keys/refresh-token-public.key
-      # Mail (keeping your gmail settings)
+      # Mail Configuration
       - MAIL_USERNAME=sokname56@gmail.com
       - MAIL_PASSWORD=tcps zgvu rnsf klrf
       - MAIL_HOST=smtp.gmail.com
       - MAIL_HOST_PORT=587
     ports:
-      - '8080:8888' # Maps External 8080 to your App's 8888
+      - '8080:8888'
     volumes:
       - '/home/media:/home/media'
-      - './access-refresh-token-keys:/keys' # Maps your keys folder to /keys
+      - './access-refresh-token-keys:/keys'
 
 networks:
   survey-network:
