@@ -10,4 +10,6 @@ services:
     ports:
       - '8080:8080'
     volumes:
+      # Format: HOST_PATH:CONTAINER_PATH
       - '/home/media:/home/media'
+      - '/home/keys:/keys'

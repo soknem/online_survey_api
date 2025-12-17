@@ -1,12 +1,10 @@
 # Builder stage
-# Using Gradle 8.x with JDK 21
 FROM gradle:8.5-jdk21-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN gradle build --no-daemon -x test
 
 # Final stage
-# Using Eclipse Temurin JDK 21 (LTS) on Alpine
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
@@ -15,7 +13,7 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# Volumes for persistent data
+# These instructions inform Docker that these paths are intended for mounting
 VOLUME /home/media
 VOLUME /keys
 
