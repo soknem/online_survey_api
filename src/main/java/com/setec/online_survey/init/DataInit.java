@@ -26,10 +26,11 @@ public class DataInit {
             User adminUser = new User();
             
             // Set basic details
-            adminUser.setEmail("admin@setec.com");
+            adminUser.setEmail("sokname56@gmail.com");
             adminUser.setUuid(UUID.randomUUID().toString());
             adminUser.setLastName("Admin");
             adminUser.setFirstName("Super");
+            adminUser.setEmailVerified(true);
             adminUser.setRole(UserRole.ROLE_ADMIN); // Set a high privilege role
             
             // Set mandatory password (must be hashed!)
@@ -41,10 +42,11 @@ public class DataInit {
             
             // --- 2. Create a standard Respondent user (Optional, for testing) ---
             User respondentUser = new User();
-            respondentUser.setEmail("user@setec.com");
+            respondentUser.setEmail("povsokny2021@gmail.com");
             respondentUser.setUuid(UUID.randomUUID().toString());
             respondentUser.setLastName("User");
             respondentUser.setFirstName("Test");
+            respondentUser.setEmailVerified(true);
             respondentUser.setRole(UserRole.ROLE_USER);
             respondentUser.setPassword(passwordEncoder.encode("123456"));
             userRepository.save(respondentUser);

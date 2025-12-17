@@ -1,3 +1,5 @@
+server:
+  port: 8888
 spring:
   application:
     name: online_survey
@@ -43,6 +45,9 @@ springdoc:
 
 logging:
   level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.jdbc.core: DEBUG
     root: debug
     org.springframework.web: debug
     org.springframework.security: debug

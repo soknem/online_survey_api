@@ -10,6 +10,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findUserByEmailAndEmailVerifiedFalseAndIsAccountNonLockedFalse(String email);
 
+    Optional<User> findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(String email);
+
     Boolean existsByEmail(String email);
 
     Boolean existsByEmailAndEmailVerifiedTrue(String email);

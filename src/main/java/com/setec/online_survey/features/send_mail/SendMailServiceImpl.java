@@ -66,7 +66,7 @@ public class SendMailServiceImpl implements SendMailService {
 
         user.setTokenDate(LocalDate.now());
 
-        sendMail(user.getEmail(),token,"Email Register verify");
+        sendMail(user.getEmail(),token,"Email Password Request Verify");
 
         passwordResetEmailVerifyRepository.save(passwordResetToken);
         userRepository.save(user);
