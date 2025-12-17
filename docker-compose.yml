@@ -59,6 +59,13 @@ services:
     volumes:
       - '/home/media:/home/media'
       - './access-refresh-token-keys:/keys'
+    healthcheck:
+      # We check port 8888 because that is the internal server port
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
 networks:
   survey-network:
