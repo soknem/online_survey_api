@@ -1,5 +1,5 @@
 services:
-  istad_lms_api:
+  online_survey:
     container_name: 'sa-api'
     build:
       context: .
