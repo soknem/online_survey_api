@@ -1,7 +1,10 @@
 # Builder stage
-FROM gradle:8.5-jdk21-alpine AS builder
+# Updated to Gradle 8.14 to support Spring Boot 4.0.0
+FROM gradle:8.14-jdk21-alpine AS builder
 WORKDIR /app
 COPY . .
+
+# Build the jar, skipping tests
 RUN gradle build --no-daemon -x test
 
 # Final stage
@@ -13,7 +16,7 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# These instructions inform Docker that these paths are intended for mounting
+# Volumes for persistent data
 VOLUME /home/media
 VOLUME /keys
 
