@@ -11,7 +11,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:8080","http://localhost:3000","https://imperishable-vaporous-erna.ngrok-free.dev5c","https://aa7ea781de46.ngrok-free.app")
+                .allowedOrigins("http://localhost:8080","http://localhost:3000","https://imperishable-vaporous-erna.ngrok-free.dev5c","http://34.80.194.243")
                 .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS")
                 .allowCredentials(true);
     }
