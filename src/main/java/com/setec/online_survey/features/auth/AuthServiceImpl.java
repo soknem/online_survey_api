@@ -55,20 +55,20 @@ public class AuthServiceImpl implements AuthService {
         // Access Token Cookie (15 min)
         ResponseCookie accessTokenCookie = ResponseCookie.from("access_token", tokenPair.accessToken()) // <--- FIXED
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(30)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
 
         // Refresh Token Cookie (3 days)
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", tokenPair.refreshToken()) // <--- FIXED
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/api/v1/auth/refresh")
                 .maxAge(259200)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
     }

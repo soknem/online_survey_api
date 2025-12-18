@@ -26,7 +26,7 @@ EXPOSE 8080
 # Environment variable for Spring Profile
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Volumes for persistent data (matching your docker-compose)
+# Volumes for persistent datadoc (matching your docker-compose)
 VOLUME /home/media
 VOLUME /keys
 
