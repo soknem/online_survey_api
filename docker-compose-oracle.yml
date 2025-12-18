@@ -27,7 +27,6 @@ services:
   # --- Spring Boot API Service ---
   online_survey:
     container_name: 'sa-api'
-    image: asia-east1-docker.pkg.dev/strong-summer-481511-s6/my-survey-repo/backend:v1
     build:
       context: ../sa_online_survey_api
       dockerfile: Dockerfile
