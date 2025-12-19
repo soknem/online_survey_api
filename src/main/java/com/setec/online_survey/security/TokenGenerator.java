@@ -28,7 +28,7 @@ public class TokenGenerator {
                 .issuer("SA_ONLINE_SURVEY")
                 .issuedAt(now)
                 // --- MODIFIED: Reduced to 15 minutes for security ---
-                .expiresAt(now.plus(1, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(3, ChronoUnit.MINUTES))
                 .subject(userDetails.getUsername())
                 .claim("roles", userDetails.getRoles())
                 .build();
@@ -41,7 +41,7 @@ public class TokenGenerator {
                 .issuer("SA_ONLINE_SURVEY")
                 .issuedAt(now)
                 // --- MODIFIED: Set to 3 days ---
-                .expiresAt(now.plus(2, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(30, ChronoUnit.MINUTES))
                 .subject(userDetails.getUsername())
                 .build();
         return jwtRefreshTokenEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

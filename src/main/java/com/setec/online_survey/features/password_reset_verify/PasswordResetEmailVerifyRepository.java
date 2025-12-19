@@ -11,6 +11,8 @@ public interface PasswordResetEmailVerifyRepository extends JpaRepository<Passwo
 
     Optional<PasswordResetToken> findByUser(User user);
 
+    PasswordResetToken findByUserEmail(String email);
+
     Boolean existsByUserEmail(String email);
 
     void deleteByUser(User user);

@@ -27,7 +27,7 @@ public class PasswordResetEmailVerifyController {
 
     @PostMapping("/token")
     BasedMessage resend(@Valid @RequestBody PasswordForgotRequest passwordForgotRequest) {
-        passwordResetEmailVerifyService.resend(passwordForgotRequest);
+        passwordResetEmailVerifyService.forgotPasswordRequest(passwordForgotRequest);
         return new BasedMessage("Email has been verified successfully");
     }
 

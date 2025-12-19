@@ -29,10 +29,12 @@ public class PasswordResetEmailVerifyServiceImpl implements PasswordResetEmailVe
     public void forgotPasswordRequest(PasswordForgotRequest passwordForgotRequest) {
         User user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(passwordForgotRequest.email())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("User =%s has not been found",passwordForgotRequest.email())));
-        boolean check =passwordResetEmailVerifyRepository.existsByUserEmail(user.getEmail());
-        if(check){
+
+        PasswordResetToken passwordResetToken =passwordResetEmailVerifyRepository.findByUserEmail(user.getEmail());
+
+        if(passwordResetToken!=null){
             System.out.println("SOKNEM_VV");
-            passwordResetEmailVerifyRepository.deleteByUser(user);
+            passwordResetEmailVerifyRepository.delete(passwordResetToken);
 
         }
 
@@ -49,14 +51,6 @@ public class PasswordResetEmailVerifyServiceImpl implements PasswordResetEmailVe
         return !token.getExpiration().isBefore(LocalTime.now());
     }
 
-    @Override
-    public void resend(PasswordForgotRequest passwordForgotRequest) {
-        User user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(passwordForgotRequest.email())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("User =%s has not been found",passwordForgotRequest.email())));
-
-        passwordResetEmailVerifyRepository.deleteByUser(user);
-        sendMailService.generateResetPasswordOtp(user);
-    }
 
     @Override
     public User verify(PasswordForgotOtpVerify passwordForgotOtpVerify) {

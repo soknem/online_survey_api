@@ -14,3 +14,15 @@ MAIL_USERNAME: sokname56@gmail.com
 MAIL_PASSWORD: tcps zgvu rnsf klrf
 MAIL_HOST: smtp.gmail.com
 MAIL_HOST_PORT: 587
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.jdbc.core: DEBUG
+    root: debug
+    org.springframework.web: debug
+    org.springframework.security: debug
+    com.online_survey.survey: debug
+    org.springframework.mail: debug
+    org.hibernate.engine.internal.Profiler: debug

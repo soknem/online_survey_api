@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(30)
+                .maxAge(300)
                 .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
@@ -76,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public void register(RegisterRequest request) {
-        // ... (existing register logic remains the same) ...
+
         if (userRepository.existsByEmailAndEmailVerifiedTrue(request.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
         }
@@ -85,7 +85,8 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Confirm password miss match");
         }
 
-        User user = new User();
+        User user = userRepository.findByEmailAndEmailVerifiedFalseAndIsAccountNonLockedFalse(request.email()).orElse(new User());
+
         user.setUuid(UUID.randomUUID().toString());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));

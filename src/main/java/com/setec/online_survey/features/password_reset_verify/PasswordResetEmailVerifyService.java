@@ -14,8 +14,6 @@ public interface PasswordResetEmailVerifyService {
 
     boolean isExpired(PasswordResetToken token);
 
-    void resend(PasswordForgotRequest passwordForgotRequest);
-
     User verify(PasswordForgotOtpVerify passwordForgotOtpVerify);
 
     void resetPassword(PasswordResetRequest passwordResetRequest);
