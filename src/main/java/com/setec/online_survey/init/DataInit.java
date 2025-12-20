@@ -50,7 +50,18 @@ public class DataInit {
             respondentUser.setRole(UserRole.ROLE_USER);
             respondentUser.setPassword(passwordEncoder.encode("123456"));
             userRepository.save(respondentUser);
-            
+
+            // --- 2. Create a standard Respondent user (Optional, for testing) ---
+            User sn = new User();
+            sn.setEmail("psnpsn667788@gmail.com");
+            sn.setUuid(UUID.randomUUID().toString());
+            sn.setLastName("User");
+            sn.setFirstName("Test");
+            sn.setEmailVerified(true);
+            sn.setRole(UserRole.ROLE_USER);
+            sn.setPassword(passwordEncoder.encode("123456"));
+            userRepository.save(sn);
+
 
 
         }

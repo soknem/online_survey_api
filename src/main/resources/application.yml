@@ -37,6 +37,20 @@ spring:
   profiles:
     active: dev
 
+minio:
+  url: ${minio-url}
+  secret-key: ${MINIO_SECRETE_KEY}
+  bucket-name: ${minio-bucket}
+  access-key: ${MINIO_ACCESS_KEY}
+
+media:
+  #media endpoint
+  image-end-point: ${image-endpoint}
+  video-end-point: ${video-endpoint}
+
+  #the host that handle show image
+  base-uri: ${base-uri}
+
 springdoc:
   swagger-ui:
     path: /ui

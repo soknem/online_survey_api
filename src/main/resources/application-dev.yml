@@ -26,3 +26,13 @@ logging:
     com.online_survey.survey: debug
     org.springframework.mail: debug
     org.hibernate.engine.internal.Profiler: debug
+
+#minio
+minio-url: http://143.198.83.9:9000
+minio-bucket: media
+MINIO_SECRETE_KEY: 7H7NYDvIw79KASm2k9DOq6fpWNsoCZK0D8LgYMwW
+MINIO_ACCESS_KEY: 2Ga483QLfVJTAqA8ZPYD
+#media
+base-uri: http://localhost:8080
+image-endpoint: /api/v1/images
+video-endpoint: /api/v1/videos

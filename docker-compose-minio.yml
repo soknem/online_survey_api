@@ -1,0 +1,33 @@
+x-minio-common: &minio-common
+  image: quay.io/minio/minio:latest
+  command: server --console-address ":9090" /mnt/data
+  ports:
+    - "0.0.0.0:7506:9000"  # MinIO API port
+    - "0.0.0.0:7507:9090"  # MinIO console port
+  environment:
+    MINIO_ROOT_USER: minio
+    MINIO_ROOT_PASSWORD: minio123
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
+
+services:
+  minio1:
+    <<: *minio-common
+    hostname: minio1
+    volumes:
+      - type: bind
+        source: ./data
+        target: /mnt/data
+      - type: bind
+        source: ./config
+        target: /etc/config.env
+    networks:
+      - survey-network
+
+networks:
+  survey-network:
+    external: true
+    name: sa_online_survey_api_survey-network

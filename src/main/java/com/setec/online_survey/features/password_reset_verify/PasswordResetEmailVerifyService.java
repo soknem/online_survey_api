@@ -17,4 +17,6 @@ public interface PasswordResetEmailVerifyService {
     User verify(PasswordForgotOtpVerify passwordForgotOtpVerify);
 
     void resetPassword(PasswordResetRequest passwordResetRequest);
+
+    void deleteTokenByUser(String token);
 }

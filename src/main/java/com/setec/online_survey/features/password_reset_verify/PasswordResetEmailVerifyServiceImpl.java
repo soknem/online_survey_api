@@ -94,4 +94,9 @@ public class PasswordResetEmailVerifyServiceImpl implements PasswordResetEmailVe
       passwordResetEmailVerifyRepository.deleteByUser(user);
 
     }
+
+    @Override
+    public void deleteTokenByUser(String token) {
+
+    }
 }
