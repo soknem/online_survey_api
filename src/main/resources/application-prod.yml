@@ -1,6 +1,6 @@
 DB_USERNAME: sa
 DB_PASSWORD: sa
-DB_HOST: localhost
+DB_HOST: oracle-free
 DB_PORT: 1521
 DB_NAME: FREEPDB1
 
@@ -16,11 +16,12 @@ MAIL_HOST: smtp.gmail.com
 MAIL_HOST_PORT: 587
 
 #minio
-minio-url: http://143.198.83.9:9000
-minio-bucket: media
-MINIO_SECRETE_KEY: 7H7NYDvIw79KASm2k9DOq6fpWNsoCZK0D8LgYMwW
-MINIO_ACCESS_KEY: 2Ga483QLfVJTAqA8ZPYD
+minio-url: http://sa_online_survey_api-minio1-1:9000
+#minio-url: http://34.80.194.243:9000
+minio-bucket: sa-resource
+MINIO_SECRETE_KEY: minio123
+MINIO_ACCESS_KEY: minio
 #media
-base-uri: http://localhost:8080
-image-endpoint: /api/v1/images
-video-endpoint: /api/v1/videos
+base-uri: https://resource.supersurvey.live
+image-endpoint: /api/v1/files
+video-endpoint: /api/v1/files
