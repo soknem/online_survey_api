@@ -28,11 +28,15 @@ logging:
     org.hibernate.engine.internal.Profiler: debug
 
 #minio
+#minio-url: http://sa_online_survey_api-minio1-1:9000
 minio-url: http://34.80.194.243:9000
 minio-bucket: sa-resource
 MINIO_SECRETE_KEY: minio123
 MINIO_ACCESS_KEY: minio
 #media
-base-uri: http://localhost:8080
+base-uri: https://fd841f57c668.ngrok-free.app
+#base-uri: http://localhost:8080
 image-endpoint: /api/v1/files
 video-endpoint: /api/v1/files
+logo-path: static/images/logo.png
+survey-share-url: /api/v1/surveys/share/

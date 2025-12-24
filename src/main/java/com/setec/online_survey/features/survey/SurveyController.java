@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SurveyController {
 
-    private SurveyService surveyService;
+    private final SurveyService surveyService;
 
     @PostMapping
     public void createSurvey(@RequestBody SurveyRequest surveyRequest){
@@ -34,4 +34,15 @@ public class SurveyController {
     public void deleteSurveyByUuid(String uuid){
         surveyService.deleteSurveyByUuid(uuid);
     }
+
+    @PutMapping("/{uuid}/status")
+    public void surveyPublicStatus(@PathVariable String uuid){
+        surveyService.surveyPublicStatus(uuid);
+    }
+
+    @GetMapping("/share/{alias}")
+    public SurveyResponse getPublicSurvey(@PathVariable String alias){
+        return surveyService.getPublicSurveyByLink(alias);
+    }
+
 }

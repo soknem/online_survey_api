@@ -88,8 +88,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Allow auth endpoints, swagger, and static resources
-                        .requestMatchers("/api/vi/files/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**","/api/v1/user/**").permitAll()
+                        .requestMatchers("/api/v1/files/**","/api/v1/qrcodes/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**","/api/v1/users/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

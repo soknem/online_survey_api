@@ -12,7 +12,7 @@ import java.io.InputStream;
 @Service
 @RequiredArgsConstructor
 //@RefreshScope
-public class MinioServiceImpl implements MinioService {
+public class    MinioServiceImpl implements MinioService {
 
     private final MinioClient minioClient;
 

@@ -1,19 +1,24 @@
 package com.setec.online_survey.features.survey.dto;
 
+import com.setec.online_survey.domain.SurveyType;
+import jakarta.persistence.Column;
+
 import java.time.LocalDateTime;
 
-public record SurveyRequest (
-        Long id,
+public record SurveyRequest(
         String title,
         String description,
 
-        String status,
-        LocalDateTime startDate,
-        LocalDateTime closeDate,
-        Integer maxResponses,
-        Integer totalQuestions,           // derived
-        Integer totalResponses           // derived from responseSessions.size()
+        String startDate,
 
-){
+        String closeDate,
+
+        Boolean isPublic,
+
+        Boolean isClosed,
+
+        SurveyType surveyType
+
+) {
 
 }

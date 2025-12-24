@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Optional;
 
 public class EntityAuditorAware implements AuditorAware<String> {
+    @org.jetbrains.annotations.NotNull
     @NotNull
     @Override
     public Optional<String> getCurrentAuditor() {

@@ -58,7 +58,7 @@ public class FileController {
 
     // produces = Accept
     // consumes = Content-Type
-    @GetMapping(path = "/{fileName}/download",
+    @GetMapping(path = "/download/{fileName}",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     ResponseEntity<?> downloadFileByName(@PathVariable String fileName) {
 

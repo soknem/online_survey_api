@@ -35,17 +35,23 @@ public class Survey extends Auditable<String>  {
     private String description;
 
     @Column(nullable = false, unique = true, length = 255)
-    private String surveyURL; // Unique public link
+    private String surveyUrl;
 
-    @Column(nullable = false, length = 50)
-    private String status;
+    private String qrCodeUrl;
+
 
     @Column(nullable = false)
     private LocalDateTime startDate;
 
     private LocalDateTime closeDate;
 
-    private Integer maxResponses; // Optional limit
+    private Boolean isPublic =false;
+
+    private Boolean isClosed =false;
+
+    private  SurveyType surveyType;
+
+    private Integer maxResponses;
 
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions;
