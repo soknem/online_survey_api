@@ -57,6 +57,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.zxing/core
     implementation 'com.google.zxing:core:3.5.4'
 
+    // https://mvnrepository.com/artifact/com.github.slugify/slugify
+    implementation 'com.github.slugify:slugify:3.0.7'
+
 }
 
 tasks.named('test') {

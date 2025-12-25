@@ -1,5 +1,6 @@
 package com.setec.online_survey.features.survey;
 
+import com.github.slugify.Slugify;
 import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.features.survey.dto.SurveyRequest;
@@ -117,6 +118,9 @@ public class SurveyServiceImpl implements SurveyService{
 
     @Override
     public SurveyShareResponse shareSurvey(String surveyUui) {
+
+        final Slugify slg = Slugify.builder().build();
+        //return slg.slugify(title);
         return null;
     }
 }
