@@ -34,9 +34,12 @@ minio-bucket: sa-resource
 MINIO_SECRETE_KEY: minio123
 MINIO_ACCESS_KEY: minio
 #media
-base-uri: https://fd841f57c668.ngrok-free.app
-#base-uri: http://localhost:8080
+#base-uri: https://fd841f57c668.ngrok-free.app
+#base-uri: https://supersurvey.live
+base-uri: http://localhost:8080
 image-endpoint: /api/v1/files
 video-endpoint: /api/v1/files
 logo-path: static/images/logo.png
 survey-share-url: /api/v1/surveys/share/
+#survey-base-url: https://supersurvey.live
+survey-base-url: http://localhost:8080

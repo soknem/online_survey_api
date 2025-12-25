@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -88,6 +89,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Allow auth endpoints, swagger, and static resources
+                        .requestMatchers(HttpMethod.GET,"/api/v1/surveys/share/**").permitAll()
                         .requestMatchers("/api/v1/files/**","/api/v1/qrcodes/**").permitAll()
                         .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**","/api/v1/users/**").permitAll()
                         .anyRequest().authenticated()

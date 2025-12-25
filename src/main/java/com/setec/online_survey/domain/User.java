@@ -39,6 +39,8 @@ public class User extends Auditable<String> {
     @Column(length = 100)
     private String firstName;
 
+    private String userProfile;
+
     @Column(length = 100)
     private String lastName;
 

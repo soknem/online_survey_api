@@ -32,7 +32,7 @@ public class ShareServiceImpl implements ShareService {
     @Value("${media.logo}")
     private String logoPath;
 
-    @Value("${media.base-uri}")
+    @Value("${media.survey-share-base-uri}")
     private String baseUri;
 
     //endpoint that handle manage medias
@@ -91,6 +91,6 @@ public class ShareServiceImpl implements ShareService {
         String fileName = qrCodeResponse.fileName();
         String qrUrl = qrCodeResponse.url();
 
-        return new ShareResponse(fileName,qrUrl);
+        return new ShareResponse(url,fileName,qrUrl);
     }
 }

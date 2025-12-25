@@ -1,8 +1,6 @@
 package com.setec.online_survey.features.survey;
 
-import com.setec.online_survey.features.survey.dto.SurveyRequest;
-import com.setec.online_survey.features.survey.dto.SurveyResponse;
-import com.setec.online_survey.features.survey.dto.SurveyShareResponse;
+import com.setec.online_survey.features.survey.dto.*;
 
 import java.util.List;
 
@@ -20,9 +18,9 @@ public interface SurveyService {
 
      void surveyPublicStatus(String uuid);
 
-     SurveyResponse getPublicSurveyByLink(String link);
+     SurveyShareResponse shareSurvey(SurveyShareRequest shareRequest);
 
-     SurveyShareResponse shareSurvey(String surveyUui);
+     SurveyPublicResponse getShareSurvey(String slug);
 
 
 }

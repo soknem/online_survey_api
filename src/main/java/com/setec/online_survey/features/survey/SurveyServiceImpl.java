@@ -3,9 +3,10 @@ package com.setec.online_survey.features.survey;
 import com.github.slugify.Slugify;
 import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.domain.User;
-import com.setec.online_survey.features.survey.dto.SurveyRequest;
-import com.setec.online_survey.features.survey.dto.SurveyResponse;
-import com.setec.online_survey.features.survey.dto.SurveyShareResponse;
+import com.setec.online_survey.features.share.ShareService;
+import com.setec.online_survey.features.share.dto.ShareRequest;
+import com.setec.online_survey.features.share.dto.ShareResponse;
+import com.setec.online_survey.features.survey.dto.*;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.mapper.SurveyMapper;
 import com.setec.online_survey.security.CustomUserDetails;
@@ -28,6 +29,7 @@ public class SurveyServiceImpl implements SurveyService{
     private final SurveyRepository surveyRepository;
     private final SurveyMapper surveyMapper;
     private final UserRepository userRepository;
+    private final ShareService shareService;
 
     @Override
     public void createSurvey(SurveyRequest surveyRequest) {
@@ -100,11 +102,45 @@ public class SurveyServiceImpl implements SurveyService{
 
     }
 
-    @Override
-    public SurveyResponse getPublicSurveyByLink(String link) {
 
-        Survey survey =surveyRepository.findSurveyBySurveyUrl(link)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("surveyUrl = %s has not been found",link)));
+    @Override
+    public SurveyShareResponse shareSurvey(SurveyShareRequest surveyShareRequest) {
+
+        Survey survey = surveyRepository.findSurveyByUuid(surveyShareRequest.surveyUuid()).orElseThrow(
+                ()-> new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("Survey =%s has not been found",surveyShareRequest.surveyUuid()))
+        );
+
+        if(survey.getIsClosed()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Survey has been closed");
+        }
+
+        if(!survey.getIsPublic()){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Survey not yet public");
+        }
+
+        final Slugify slg = Slugify.builder().build();
+        String uuid=UUID.randomUUID().toString();
+        String linkEndpoint =slg.slugify(survey.getTitle())+uuid;
+
+        ShareResponse shareResponse = shareService.shareSurvey(new ShareRequest(linkEndpoint));
+
+        String qrCodeFileName = shareResponse.qrCodeFileName();
+        String qrCodeUrl = shareResponse.qrCodeUrl();
+        String shareLink = shareResponse.shareLink();
+
+        survey.setSurveyUrl(linkEndpoint);
+        survey.setQrCodeUrl(qrCodeFileName);
+
+        surveyRepository.save(survey);
+
+        return new SurveyShareResponse(shareLink,qrCodeUrl);
+    }
+
+    @Override
+    public SurveyPublicResponse getShareSurvey(String slug) {
+
+        Survey survey =surveyRepository.findSurveyBySurveyUrl(slug)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("surveyUrl = %s has not been found",slug)));
 
         if(!survey.getIsPublic()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("survey not found"));
@@ -113,14 +149,6 @@ public class SurveyServiceImpl implements SurveyService{
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("survey has been closed"));
         }
 
-        return surveyMapper.toSurveyResponse(survey);
-    }
-
-    @Override
-    public SurveyShareResponse shareSurvey(String surveyUui) {
-
-        final Slugify slg = Slugify.builder().build();
-        //return slg.slugify(title);
-        return null;
+        return surveyMapper.toSurveyPublicResponse(survey);
     }
 }

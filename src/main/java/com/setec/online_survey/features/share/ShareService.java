@@ -11,4 +11,6 @@ public interface ShareService {
     QrCodeResponse generateAndUploadQRCode(QrCodeRequest qrCodeRequest);
 
     ShareResponse shareSurvey(ShareRequest shareRequest);
+
+
 }

@@ -49,6 +49,7 @@ media:
   video-end-point: ${video-endpoint}
   logo: ${logo-path}
   survey-share: ${survey-share-url}
+  survey-share-base-uri: ${survey-base-url}
 
   #the host that handle show image
   base-uri: ${base-uri}

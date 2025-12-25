@@ -1,8 +1,7 @@
 package com.setec.online_survey.features.survey;
 
 
-import com.setec.online_survey.features.survey.dto.SurveyRequest;
-import com.setec.online_survey.features.survey.dto.SurveyResponse;
+import com.setec.online_survey.features.survey.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,9 +39,14 @@ public class SurveyController {
         surveyService.surveyPublicStatus(uuid);
     }
 
-    @GetMapping("/share/{alias}")
-    public SurveyResponse getPublicSurvey(@PathVariable String alias){
-        return surveyService.getPublicSurveyByLink(alias);
+    @PostMapping("/share")
+    public SurveyShareResponse shareSurvey(@RequestBody SurveyShareRequest surveyShareRequest){
+        return surveyService.shareSurvey(surveyShareRequest);
+    }
+
+    @GetMapping("/share/{slug}")
+    public SurveyPublicResponse getPublicShareSurvey(@PathVariable String slug){
+       return   surveyService.getShareSurvey(slug);
     }
 
 }
