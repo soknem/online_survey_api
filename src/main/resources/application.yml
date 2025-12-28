@@ -59,6 +59,9 @@ springdoc:
     path: /ui
   api-docs:
     path: /v3/api-docs
+services:
+  file-service:
+    url: https://resource.supersurvey.live
 
 #logging:
 #  level:

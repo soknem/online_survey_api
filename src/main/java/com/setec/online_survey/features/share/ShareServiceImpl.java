@@ -5,16 +5,14 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.setec.online_survey.features.file.FileService;
-import com.setec.online_survey.features.file.dto.FileResponse;
-import com.setec.online_survey.features.share.dto.QrCodeRequest;
-import com.setec.online_survey.features.share.dto.QrCodeResponse;
-import com.setec.online_survey.features.share.dto.ShareRequest;
-import com.setec.online_survey.features.share.dto.ShareResponse;
+import com.setec.online_survey.features.share.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -27,7 +25,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ShareServiceImpl implements ShareService {
 
-    private final FileService fileService;
+    private final RestClient restClient;
 
     @Value("${media.logo}")
     private String logoPath;
@@ -38,6 +36,9 @@ public class ShareServiceImpl implements ShareService {
     //endpoint that handle manage medias
     @Value("${media.survey-share}")
     private String surveyShare;
+
+    @Value("${services.file-service.url}")
+    private String fileServiceUrl;
 
     @Override
     public QrCodeResponse generateAndUploadQRCode(QrCodeRequest qrCodeRequest) {
@@ -71,10 +72,28 @@ public class ShareServiceImpl implements ShareService {
 
             CustomMultipartFile multipartFile = new CustomMultipartFile(imageBytes, "qrcode.png");
 
-            FileResponse fileResponse = fileService.uploadSingleFile(multipartFile);
+//            FileResponse fileResponse = fileService.uploadSingleFile(multipartFile);
+
+            // 4. Use RestClient to upload to the new service
+            MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+            // Note: "file" must match the @RequestPart name in your new controller
+            bodyBuilder.part("file", multipartFile.getResource());
+
+            FileResponse fileResponse = restClient.post()
+                    .uri(fileServiceUrl+"/api/v1/files")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(bodyBuilder.build())
+                    .retrieve()
+                    .body(FileResponse.class);
+
+            if (fileResponse == null) {
+                throw new RuntimeException("Failed to get response from File Service");
+            }
 
             // 4. Pass to your existing FileService
             return new QrCodeResponse(fileResponse.name(),fileResponse.uri());
+
+
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate QR Code", e);
