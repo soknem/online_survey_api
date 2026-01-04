@@ -4,6 +4,6 @@ public record OptionResponse(
 
         String uuid,
         Integer orderIndex,
-        String questionText
+        String optionText
 ) {
 }

@@ -1,6 +1,9 @@
 package com.setec.online_survey.features.survey;
 
 
+import com.setec.online_survey.features.question.QuestionService;
+import com.setec.online_survey.features.question.dto.QuestionRequest;
+import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.survey.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +16,7 @@ import java.util.List;
 public class SurveyController {
 
     private final SurveyService surveyService;
+    private final QuestionService questionService;
 
     @PostMapping
     public void createSurvey(@RequestBody SurveyRequest surveyRequest){
@@ -47,6 +51,17 @@ public class SurveyController {
     @GetMapping("/share/{slug}")
     public SurveyPublicResponse getPublicShareSurvey(@PathVariable String slug){
        return   surveyService.getShareSurvey(slug);
+    }
+
+
+    @PatchMapping("/{surveyUuid}/question")
+    public void editSurveyQuestion(@RequestBody List<QuestionRequest> questionRequests, @PathVariable String surveyUuid){
+        questionService.updateSurveyQuestions(questionRequests,surveyUuid);
+    }
+
+    @GetMapping("/{uuid}/question")
+    public List<QuestionResponse> getQuestionBySurvey(@PathVariable String uuid){
+      return  questionService.getQuestionBySurveyUuid(uuid);
     }
 
 }

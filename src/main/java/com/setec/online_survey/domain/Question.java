@@ -7,6 +7,10 @@
     import lombok.Getter;
     import lombok.NoArgsConstructor;
     import lombok.Setter;
+
+    import java.util.HashSet;
+    import java.util.Set;
+
     @Setter
     @Getter
     @NoArgsConstructor
@@ -24,7 +28,7 @@
         @JoinColumn(name = "survey_id", nullable = false)
         private Survey survey;
 
-        @Column(columnDefinition = "CLOB", nullable = false)
+        @Column(length = 4000, nullable = false)
         private String questionText;
 
         @Enumerated(EnumType.STRING)
@@ -39,4 +43,12 @@
         private Boolean isRequired = false;
 
         // ... relationships with Option and Answer
+        @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+        private Set<Option> options;
+
+        public void addOption(Option option) {
+            if (this.options == null) this.options = new HashSet<>();
+            this.options.add(option);
+            option.setQuestion(this);
+        }
     }

@@ -1,29 +1,91 @@
 package com.setec.online_survey.features.question;
 
+import com.setec.online_survey.domain.Option;
 import com.setec.online_survey.domain.Question;
+import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
+import com.setec.online_survey.features.survey.SurveyRepository;
+import com.setec.online_survey.features.survey.dto.SurveyResponse;
+import com.setec.online_survey.mapper.OptionMapper;
 import com.setec.online_survey.mapper.QuestionMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService{
 
-    private QuestionRepository questionRepository;
-    private QuestionMapper questionMapper;
+    private final SurveyRepository surveyRepository;
 
+    private final QuestionRepository questionRepository;
+    private final QuestionMapper questionMapper;
+    private final OptionMapper optionMapper;
 
     @Override
-    public void createQuestion(QuestionRequest questionRequest) {
-        Question question = questionMapper.fromQuestionRequest(questionRequest);
+    @Transactional
+    public void updateSurveyQuestions(List<QuestionRequest> questionRequests, String surveyUuid) {
 
-        questionRepository.save(question);
+        questionRequests.forEach(a->{
+            System.out.printf(a.questionText()+"SKSK");
+        });
+
+        // 1. Find the parent Survey
+        Survey survey = surveyRepository.findSurveyByUuid(surveyUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("survey = %s has not been found", surveyUuid)));
+
+        // 2. Map and Update Questions
+        Set<Question> updatedQuestions = questionRequests.stream()
+                .map(request -> {
+                    Question question = questionRepository.findQuestionByUuid(request.uuid())
+                            .orElseGet(() -> {
+                                Question newQ = questionMapper.fromQuestionRequest(request);
+                                newQ.setUuid(UUID.randomUUID().toString());
+                                return newQ;
+                            });
+
+                    // Update basic fields via mapper
+                    questionMapper.updateQuestion(question, request);
+                    question.setSurvey(survey);
+
+                    // 3. Handle Options (Orphan Removal for Options)
+                    var existingOptions = question.getOptions();
+                    existingOptions.clear(); // Clears old options from DB due to orphanRemoval=true
+
+                    if (request.options() != null) {
+                        request.options().forEach(optRequest -> {
+                           // System.out.printf("KKKK"+optRequest.);
+                            Option option = optionMapper.fromOptionRequest(optRequest);
+                            System.out.printf("KKKK"+option.getOptionText());
+                            if (option.getUuid() == null) {
+                                option.setUuid(UUID.randomUUID().toString());
+                            }
+                            question.addOption(option); // Crucial: sets option.setQuestion(question)
+                        });
+                    }
+                    return question;
+                })
+                .collect(Collectors.toSet());
+
+        // 4. SYNC Questions with Survey (Orphan Removal for Questions)
+        // First, clear the existing collection to trigger orphan removal for deleted questions
+        survey.getQuestions().clear();
+        // Then add the updated/new set
+        survey.getQuestions().addAll(updatedQuestions);
+
+        // 5. Save the Parent (Survey)
+        // Because of CascadeType.ALL, saving the survey saves all questions and options
+        surveyRepository.save(survey);
     }
 
     @Override

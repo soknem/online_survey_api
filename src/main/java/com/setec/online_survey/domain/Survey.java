@@ -31,16 +31,13 @@ public class Survey extends Auditable<String>  {
     @Size(max = 255)
     private String title;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(length = 4000)
     private String description;
 
-    @Column(nullable = false, unique = true, length = 255)
     private String surveyUrl;
 
     private String qrCodeUrl;
 
-
-    @Column(nullable = false)
     private LocalDateTime startDate;
 
     private LocalDateTime closeDate;

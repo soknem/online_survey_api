@@ -5,6 +5,6 @@ import com.setec.online_survey.domain.QuestionType;
 public record OptionRequest(
 
         Integer orderIndex,
-        String questionText
+        String optionText
 ) {
 }
