@@ -6,6 +6,7 @@ import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.features.option.dto.OptionRequest;
 import com.setec.online_survey.features.option.dto.OptionResponse;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
+import com.setec.online_survey.features.survey.dto.MySurveyResponse;
 import com.setec.online_survey.features.survey.dto.SurveyPublicResponse;
 import com.setec.online_survey.features.survey.dto.SurveyRequest;
 import com.setec.online_survey.features.survey.dto.SurveyResponse;
@@ -21,6 +22,8 @@ public interface SurveyMapper {
     SurveyResponse toSurveyResponse(Survey survey);
 
     SurveyPublicResponse toSurveyPublicResponse(Survey survey);
+
+    MySurveyResponse toMySurveyResponse(Survey survey);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSurvey(@MappingTarget Survey survey, SurveyRequest surveyRequest);

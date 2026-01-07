@@ -6,6 +6,7 @@ import com.setec.online_survey.features.option.dto.OptionRequest;
 import com.setec.online_survey.features.option.dto.OptionResponse;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
+import com.setec.online_survey.features.reponse.dto.SubmissionAnswerResponse;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
@@ -14,6 +15,8 @@ public interface QuestionMapper {
     Question fromQuestionRequest(QuestionRequest questionRequest);
 
     QuestionResponse toQuestionResponse(Question question);
+
+    SubmissionAnswerResponse toSubmissionAnswerResponse(Question question);
 
     @Mapping(target = "options",ignore = true)
     @Mapping(target = "id",ignore = true)

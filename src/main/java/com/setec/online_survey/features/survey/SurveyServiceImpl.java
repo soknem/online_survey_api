@@ -1,6 +1,7 @@
 package com.setec.online_survey.features.survey;
 
 import com.github.slugify.Slugify;
+import com.setec.online_survey.base.BaseSpecification;
 import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.features.share.ShareService;
@@ -10,11 +11,18 @@ import com.setec.online_survey.features.survey.dto.*;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.mapper.SurveyMapper;
 import com.setec.online_survey.security.CustomUserDetails;
+import com.setec.online_survey.util.FilterUtils;
+import com.setec.online_survey.util.SortUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -30,6 +38,7 @@ public class SurveyServiceImpl implements SurveyService{
     private final SurveyMapper surveyMapper;
     private final UserRepository userRepository;
     private final ShareService shareService;
+    private final BaseSpecification<Survey> baseSpecification;
 
     @Override
     public void createSurvey(SurveyRequest surveyRequest) {
@@ -150,5 +159,38 @@ public class SurveyServiceImpl implements SurveyService{
         }
 
         return surveyMapper.toSurveyPublicResponse(survey);
+    }
+
+    @Override
+    public Page<MySurveyResponse> getMySurvey(BaseSpecification.FilterDto filterBody,WebRequest request, String globalOperator,String sortBy,int pageNumber, int pageSize,Authentication authentication) {
+
+        SortUtils.validateSortBy(Survey.class, sortBy);
+
+        BaseSpecification.FilterDto filterDto;
+
+        if(filterBody !=null){
+            filterDto=filterBody;
+        }else{
+            filterDto = FilterUtils.buildFilterDto(request, FilterUtils.GlobalOperator.fromString(globalOperator));
+        }
+
+        //create a dynamic query specification for filtering Subject entities based on the criteria provided
+        Specification<Survey> specification = baseSpecification.filter(filterDto);
+
+        if (pageSize == 0) {
+            pageSize = (int) surveyRepository.count();
+        }
+
+        //create sort order
+        Sort sortById = Sort.by(Sort.Direction.DESC, sortBy);
+
+        //create pagination with current pageNumber and pageSize of pageNumber
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sortById);
+
+        //find all subject in database
+        Page<Survey> surveys = surveyRepository.findAll(specification,pageRequest);
+
+        //map entity to DTO and return
+        return surveys.map(surveyMapper::toMySurveyResponse);
     }
 }

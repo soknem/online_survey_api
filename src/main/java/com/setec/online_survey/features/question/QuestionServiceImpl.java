@@ -35,9 +35,6 @@ public class QuestionServiceImpl implements QuestionService{
     @Transactional
     public void updateSurveyQuestions(List<QuestionRequest> questionRequests, String surveyUuid) {
 
-        questionRequests.forEach(a->{
-            System.out.printf(a.questionText()+"SKSK");
-        });
 
         // 1. Find the parent Survey
         Survey survey = surveyRepository.findSurveyByUuid(surveyUuid)
@@ -64,9 +61,9 @@ public class QuestionServiceImpl implements QuestionService{
 
                     if (request.options() != null) {
                         request.options().forEach(optRequest -> {
-                           // System.out.printf("KKKK"+optRequest.);
+
                             Option option = optionMapper.fromOptionRequest(optRequest);
-                            System.out.printf("KKKK"+option.getOptionText());
+
                             if (option.getUuid() == null) {
                                 option.setUuid(UUID.randomUUID().toString());
                             }
@@ -118,7 +115,6 @@ public class QuestionServiceImpl implements QuestionService{
         questionRepository.save(question);
 
         return  questionMapper.toQuestionResponse(question);
-
 
     }
 
