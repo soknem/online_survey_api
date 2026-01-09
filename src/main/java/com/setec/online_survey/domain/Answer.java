@@ -33,5 +33,5 @@ public class Answer extends Auditable<String>  {
     // NULL if text-based
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "answer_option_id")
-    private Option answerOption;
+    private  Option option;
 }

@@ -10,20 +10,22 @@ import com.setec.online_survey.features.survey.dto.MySurveyResponse;
 import com.setec.online_survey.features.survey.dto.SurveyPublicResponse;
 import com.setec.online_survey.features.survey.dto.SurveyRequest;
 import com.setec.online_survey.features.survey.dto.SurveyResponse;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface SurveyMapper {
+
     Survey fromSurveyRequest(SurveyRequest surveyRequest);
 
     SurveyResponse toSurveyResponse(Survey survey);
 
     SurveyPublicResponse toSurveyPublicResponse(Survey survey);
 
-    MySurveyResponse toMySurveyResponse(Survey survey);
+    MySurveyResponse toMySurveyResponse(Survey survey,Integer totalResponse, String thumbnail);
+
+    @Mapping(target = "totalResponse", expression = "java(survey.getResponseSessions() != null ? survey.getResponseSessions().size() : 0)")
+    @Mapping(target = "thumbnail", source = "thumbnail")
+    MySurveyResponse toMySurveyResponse(Survey survey, String thumbnail);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSurvey(@MappingTarget Survey survey, SurveyRequest surveyRequest);

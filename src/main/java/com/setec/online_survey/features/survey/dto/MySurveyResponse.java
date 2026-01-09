@@ -16,6 +16,13 @@ public record MySurveyResponse(
 
         Boolean isClosed,
 
+        String createdDate,
+        String lastModifiedDate,
+
+        Integer totalResponse,
+
+        String thumbnail,
+
         SurveyType surveyType
 ) {
 }

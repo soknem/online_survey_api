@@ -6,12 +6,15 @@ import com.setec.online_survey.features.question.QuestionService;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.survey.dto.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -25,7 +28,8 @@ public class SurveyController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    public void createSurvey(@RequestBody SurveyRequest surveyRequest) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createSurvey(@RequestBody @Valid SurveyRequest surveyRequest) {
         surveyService.createSurvey(surveyRequest);
     }
 
@@ -85,13 +89,14 @@ public class SurveyController {
             WebRequest request,
             @RequestParam(value = "gop", defaultValue = "AND") String globalOperator,
             @RequestParam(value = "sortBy", defaultValue = "createdDate") String sortBy,
+            @RequestParam(value = "orderBy", defaultValue = "ASC") Sort.Direction orderBy,
             @RequestParam(value = "pageNumber", defaultValue = "0") int pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "25") int pageSize,
             @RequestBody(required = false) BaseSpecification.FilterDto filterBody,
             Authentication authentication
     ) {
 
-        return surveyService.getMySurvey(filterBody,request, globalOperator, sortBy,pageNumber, pageSize,authentication);
+        return surveyService.getMySurvey(filterBody,request, globalOperator, sortBy,orderBy,pageNumber, pageSize,authentication);
     }
 
 }

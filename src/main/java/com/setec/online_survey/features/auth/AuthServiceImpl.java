@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(300)
+                .maxAge(900)
                 .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", tokenPair.refreshToken()) // <--- FIXED
                 .httpOnly(true)
                 .secure(true)
-                .path("/api/v1/auth/refresh")
+                .path("/")
                 .maxAge(259200)
                 .sameSite("None")
                 .build();

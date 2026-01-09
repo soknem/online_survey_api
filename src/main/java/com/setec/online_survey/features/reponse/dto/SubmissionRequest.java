@@ -6,6 +6,9 @@ import java.util.List;
 public record SubmissionRequest(
          LocalDateTime startTime,
          String surveyUuid,
-         List<SubmissionAnswerRequest> answers
+         List<SubmissionAnswerRequest> answers,
+         String fingerprint,
+         String browserUuid,
+         String userAgent
 ) {
 }

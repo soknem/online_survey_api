@@ -46,9 +46,11 @@ public class Survey extends Auditable<String>  {
 
     private Boolean isClosed =false;
 
-    private  SurveyType surveyType;
+    private  SurveyType surveyType = SurveyType.HYBRID;
 
     private Integer maxResponses;
+
+    private String image;
 
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions;

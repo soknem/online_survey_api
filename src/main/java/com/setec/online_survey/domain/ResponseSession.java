@@ -12,14 +12,7 @@ import java.util.Set;
 @Setter
 @Getter
 @NoArgsConstructor
-@Table(name = "response_sessions",
-       uniqueConstraints = {
-           // Constraint 1: Registered User can only submit once per survey
-           @UniqueConstraint(name = "UK_Registered_Response", columnNames = {"survey_id", "respondent_id"}),
-           // Constraint 2: Anonymous user (identified by IP) can only submit once per survey
-           @UniqueConstraint(name = "UK_Anonymous_Response", columnNames = {"survey_id", "ip_address"})
-       }
-)
+@Table(name = "response_sessions")
 @Entity
 public class ResponseSession extends Auditable<String> {
 
@@ -47,4 +40,8 @@ public class ResponseSession extends Auditable<String> {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Answer> answers;
+
+    private String fingerprint;
+    private String browserUuid;
+    private String userAgent;
 }

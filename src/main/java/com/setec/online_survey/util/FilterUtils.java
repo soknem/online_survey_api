@@ -71,7 +71,7 @@ public class FilterUtils {
             String[] values = entry.getValue();
 
             // Skip special parameters
-            if (paramName.equals("gop") || paramName.equals("pageNumber") || paramName.equals("pageSize")||paramName.equals("monthYear")) {
+            if (paramName.equals("orderBy")||paramName.equals("sortBy") ||paramName.equals("gop") || paramName.equals("pageNumber") || paramName.equals("pageSize")||paramName.equals("monthYear")) {
                 continue;
             }
 

@@ -92,6 +92,7 @@ public class SecurityConfig {
                         // Allow auth endpoints, swagger, and static resources
                         .requestMatchers(HttpMethod.GET,"/api/v1/surveys/share/**").permitAll()
                         .requestMatchers("/api/v1/files/**","/api/v1/qrcodes/**").permitAll()
+                        .requestMatchers("/api/v1/surveys/submit/**","/api/v1/surveys/submit").permitAll()
                         .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**","/api/v1/users/**").permitAll()
                         .anyRequest().authenticated()
                 );
