@@ -4,6 +4,8 @@ DB_HOST: localhost
 DB_PORT: 1521
 DB_NAME: orcl
 
+GEMINI_API_KEY: AIzaSyDhE0p7w1Mt3bJ6tvJ6ZmZwIJu0ndGO9z8
+
 ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
 ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
 # This is for the refresh token
@@ -43,3 +45,4 @@ logo-path: static/images/logo.png
 survey-share-url: /api/v1/surveys/share/
 #survey-base-url: https://supersurvey.live
 survey-base-url: http://localhost:8080
+
