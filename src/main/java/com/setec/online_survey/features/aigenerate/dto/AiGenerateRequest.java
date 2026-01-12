@@ -4,5 +4,6 @@ public record AiGenerateRequest(
     String prompt,
     String surveyTitle,
     String surveyType,
-    int numberOfQuestions
+    int numberOfQuestions,
+    String level
 ) {}

@@ -4,7 +4,7 @@ DB_HOST: localhost
 DB_PORT: 1521
 DB_NAME: orcl
 
-GEMINI_API_KEY: AIzaSyDhE0p7w1Mt3bJ6tvJ6ZmZwIJu0ndGO9z8
+GEMINI_API_KEY: AIzaSyANA1TWXaiAXenfujDJ6aaddgrMJ9UheUA
 
 ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
 ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
