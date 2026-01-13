@@ -46,6 +46,7 @@ public class AiGenerateServiceImpl implements AiGenerateService {
         throw new RuntimeException("All models failed for " + provider + ": " + lastException.getMessage());
     }
 
+
     private List<AiQuestionResponse> executePrompt(AiGenerateRequest request, String provider, String modelName) {
         ChatModel activeModel = switch (provider) {
             case "groq" -> groqChatModel;

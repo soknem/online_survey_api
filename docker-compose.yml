@@ -55,6 +55,8 @@ services:
       - MAIL_PASSWORD=tcps zgvu rnsf klrf
       - MAIL_HOST=smtp.gmail.com
       - MAIL_HOST_PORT=587
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
     ports:
       - '8080:8080'
     volumes:
