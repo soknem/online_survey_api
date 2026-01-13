@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: online_survey
+  config:
+    import: "optional:file:.env[.properties]"
   servlet: # this is for file upload
     multipart:
       max-file-size: 1000MB

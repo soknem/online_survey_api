@@ -2,9 +2,8 @@ DB_USERNAME: sa
 DB_PASSWORD: sa
 DB_HOST: oracle-free
 DB_PORT: 1521
-DB_NAME: FREEPDB1
+DB_NAME: Z
 
-GEMINI_API_KEY: AIzaSyANA1TWXaiAXenfujDJ6aaddgrMJ9UheUA
 
 ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
 ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
