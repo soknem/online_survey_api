@@ -3,81 +3,52 @@ package com.setec.online_survey.features.aigenerate;
 import com.setec.online_survey.features.aigenerate.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.google.genai.GoogleGenAiChatModel;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
 public class AiGenerateServiceImpl implements AiGenerateService {
 
-    private final ChatClient chatClient;
+    private final GoogleGenAiChatModel googleChatModel;
+    private final OpenAiChatModel openAiChatModel;
 
-    // Define the Levels and their corresponding Model IDs in order
-    private static final Map<String, String> MODEL_LEVELS = new LinkedHashMap<>();
-
-    static {
-        MODEL_LEVELS.put("ADVANCE", "gemini-3-flash-preview");
-        MODEL_LEVELS.put("HARD", "gemini-2.5-flash");
-        MODEL_LEVELS.put("MID", "gemini-2.5-flash-lite");
-        MODEL_LEVELS.put("LOW", "gemma-3-27b-it");
-        MODEL_LEVELS.put("VERY_LOW", "gemma-3-12b-it");
-    }
-
-    public AiGenerateServiceImpl(ChatClient.Builder builder) {
-        // Build client without default system prompt to maintain Gemma compatibility
-        this.chatClient = builder.build();
+    public AiGenerateServiceImpl(GoogleGenAiChatModel googleChatModel, OpenAiChatModel openAiChatModel) {
+        this.googleChatModel = googleChatModel;
+        this.openAiChatModel = openAiChatModel;
     }
 
     @Override
     public List<AiQuestionResponse> generateSurvey(AiGenerateRequest request) {
-        // 1. Determine the starting point based on frontend request (default to ADVANCE)
-        String requestedLevel = (request.level() != null) ? request.level().toUpperCase() : "ADVANCE";
+        // Choose provider: "openai" or "google" (default to google)
+        String provider = (request.provider() != null) ? request.provider().toLowerCase() : "google";
 
-        // 2. Create a sub-list of models starting from the requested level
-        List<String> priorityChain = getPriorityChain(requestedLevel);
+        ChatModel selectedModel = provider.equals("openai") ? openAiChatModel : googleChatModel;
+        String modelName = determineModelName(provider, request.level());
 
-        Exception lastException = null;
+        log.info("Using provider: {} with model: {}", provider, modelName);
 
-        // 3. Loop through the chain
-        for (String modelName : priorityChain) {
-            try {
-                log.info("Attempting survey generation with model: {}", modelName);
-                return executePrompt(request, modelName);
-            } catch (Exception e) {
-                lastException = e;
-                log.warn("Model {} failed ({}). Trying next in chain...", modelName, e.getMessage());
-
-                // If it's a validation error (not a quota/server error), stop immediately
-                if (e.getMessage() != null && e.getMessage().contains("400")) {
-                    log.error("Validation error, stopping chain.");
-                    break;
-                }
-            }
-        }
-
-        throw new RuntimeException("All models in the chain failed. Last error: " +
-                (lastException != null ? lastException.getMessage() : "Unknown"), lastException);
+        return executePrompt(request, selectedModel, modelName, provider);
     }
 
-    /**
-     * Reusable logic to call the AI with the merged "Universal Prompt"
-     */
-    private List<AiQuestionResponse> executePrompt(AiGenerateRequest request, String modelName) {
-        return chatClient.prompt()
-                .options(GoogleGenAiChatOptions.builder()
-                        .model(modelName)
-                        .temperature(0.7)
-                        .build())
+    private List<AiQuestionResponse> executePrompt(AiGenerateRequest request, ChatModel chatModel, String modelName, String provider) {
+        // Build the options based on the provider type
+        var options = provider.equals("openai")
+                ? OpenAiChatOptions.builder().model(modelName).temperature(0.7).build()
+                : GoogleGenAiChatOptions.builder().model(modelName).temperature(0.7).build();
+
+        return ChatClient.create(chatModel).prompt()
+                .options(options)
                 .user(u -> u.text("""
                         # SYSTEM INSTRUCTIONS
-                        You are a professional survey creator. 
-                        Always output valid JSON. 
+                        You are a professional survey creator. Always output valid JSON.
                         If the prompt is in Khmer, provide labels in Khmer.
                         
                         # TASK
@@ -86,7 +57,7 @@ public class AiGenerateServiceImpl implements AiGenerateService {
                         Questions: {count}
                         
                         # OUTPUT FORMAT
-                        Return only a JSON array of questions. Ensure Khmer text is properly formatted.
+                        Return only a JSON array of questions.
                         """)
                         .param("type", request.surveyType())
                         .param("title", request.surveyTitle())
@@ -96,20 +67,21 @@ public class AiGenerateServiceImpl implements AiGenerateService {
                 .entity(new ParameterizedTypeReference<List<AiQuestionResponse>>() {});
     }
 
-    /**
-     * Returns a list of models starting from the requested level down to LOW.
-     */
-    private List<String> getPriorityChain(String startLevel) {
-        List<String> allLevels = new ArrayList<>(MODEL_LEVELS.keySet());
-        int startIndex = allLevels.indexOf(startLevel);
-
-        // If level not found, start from the beginning (ADVANCE)
-        if (startIndex == -1) startIndex = 0;
-
-        List<String> chain = new ArrayList<>();
-        for (int i = startIndex; i < allLevels.size(); i++) {
-            chain.add(MODEL_LEVELS.get(allLevels.get(i)));
+    private String determineModelName(String provider, String level) {
+        if (provider.equals("openai")) {
+            return switch (level != null ? level.toUpperCase() : "ADVANCE") {
+                case "ADVANCE" -> "gpt-4o";
+                case "HARD" -> "gpt-4-turbo";
+                default -> "gpt-4o-mini";
+            };
+        } else {
+            return switch (level != null ? level.toUpperCase() : "ADVANCE") {
+                case "ADVANCE" -> "gemini-3-flash-preview";
+                case "HARD" -> "gemini-2.5-flash";
+                case "MID" -> "gemini-2.5-flash-lite";
+                case "LOW" -> "gemma-3-27b-it";
+                default -> "gemma-3-12b-it";
+            };
         }
-        return chain;
     }
 }
