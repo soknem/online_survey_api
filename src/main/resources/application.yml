@@ -53,11 +53,10 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
-    groq:
-      api-key: ${GROQ_API_KEY}
-      base-url: https://api.groq.com/openai
-      # Note: Groq uses these specific model names
-      default-model: llama-3.3-70b-versatile
+ai:
+  groq:
+    api-key: ${GROQ_API_KEY}
+    base-url: https://api.groq.com/openai
 
 minio:
   url: ${minio-url}
