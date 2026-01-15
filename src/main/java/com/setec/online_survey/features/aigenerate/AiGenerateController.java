@@ -5,7 +5,9 @@ import com.google.genai.types.GenerateContentResponse;
 import com.setec.online_survey.features.aigenerate.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -36,5 +38,17 @@ public class AiGenerateController {
 
 //        System.out.println(response.text());
         return response;
+    }
+
+    @PostMapping(value = "/generate-multimodal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<AiQuestionResponse> createFromFile(
+            @RequestPart("request") AiGenerateRequest request,
+            @RequestPart("file") MultipartFile file) {
+
+        return aiGenerateService.generateSurveyMultimodal(
+                request,
+                file.getResource(),
+                file.getContentType()
+        );
     }
 }

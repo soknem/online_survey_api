@@ -6,12 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.google.genai.GoogleGenAiChatModel;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.Resource;
+import org.springframework.util.MimeTypeUtils;
 
 import java.util.*;
 
@@ -114,5 +117,53 @@ public class AiGenerateServiceImpl implements AiGenerateService {
             chain.add(levels.get(keys.get(i)));
         }
         return chain;
+    }
+
+    @Override
+    public List<AiQuestionResponse> generateSurveyMultimodal(
+            AiGenerateRequest request,
+            Resource fileResource,
+            String mimeType) {
+
+        String provider = (request.provider() != null) ? request.provider().toLowerCase() : "google";
+        String modelName = getModelChain(provider, request.level()).get(0);
+
+        // Multimodal is only supported for Google (Gemini/Gemma 3) in this logic
+        if (!provider.equals("google")) {
+            return executePrompt(request, provider, modelName);
+        }
+
+        log.info("Generating Multimodal with Google: {} (Mime: {})", modelName, mimeType);
+
+        // 1. Create the Media object
+        var media = new Media(MimeTypeUtils.parseMimeType(mimeType), fileResource);
+
+        // 2. Build the System Instructions (Same as your text logic)
+        String instructions = """
+        # ROLE
+        Expert Survey Designer (English/Khmer).
+        
+        # TASK
+        Analyze the attached input (image/audio) and the prompt: "{prompt}"
+        to generate a survey with {count} questions.
+        Title: {title}, Type: {type}
+        
+        # JSON FORMAT
+        Return ONLY a JSON array matching 'AiQuestionResponse'.
+        """;
+
+        // 3. Use ChatClient with Media
+        return ChatClient.create(googleChatModel).prompt()
+                .options(GoogleGenAiChatOptions.builder().model(modelName).temperature(0.7).build())
+                .user(u -> u
+                        .text(instructions)
+                        .param("prompt", request.prompt())
+                        .param("title", request.surveyTitle())
+                        .param("type", request.surveyType())
+                        .param("count", request.numberOfQuestions())
+                        .media(media) // <--- This attaches the Image or Audio
+                )
+                .call()
+                .entity(new ParameterizedTypeReference<List<AiQuestionResponse>>() {});
     }
 }
