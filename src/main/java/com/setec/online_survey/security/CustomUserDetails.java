@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class CustomUserDetails implements UserDetails, OAuth2User {
@@ -26,6 +27,10 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     @Override public String getName() { return user.getEmail(); }
     @Override public Map<String, Object> getAttributes() { return attributes; }
     public String getUuid() { return user.getUuid(); }
+
+    public Set<String> getRoles() {
+        return Set.of(user.getRole().getAuthority().replace("ROLE_", ""));
+    }
 
     @Override public boolean isAccountNonExpired() { return user.getIsAccountNonExpired(); }
     @Override public boolean isAccountNonLocked() { return user.getIsAccountNonLocked(); }

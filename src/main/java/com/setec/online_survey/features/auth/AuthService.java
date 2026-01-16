@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface AuthService {
     // Helper method to set cookies
-    void setTokensAsCookies(TokenPair tokenPair, HttpServletResponse response);
+   // void setTokensAsCookies(TokenPair tokenPair, HttpServletResponse response);
 
     @Transactional
     void register(RegisterRequest request);

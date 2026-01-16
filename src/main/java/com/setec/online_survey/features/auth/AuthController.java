@@ -55,28 +55,33 @@ public class AuthController {
         return authService.refresh(request, response);
     }
 
-    @PostMapping("/logout") // <--- NEW ENDPOINT
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        // Invalidate Access Token cookie (set maxAge to 0)
-        ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(Authentication authentication, HttpServletResponse response) {
+        // 1. Clear local cookies (Your existing logic)
+        clearCookie(response, "access_token");
+        clearCookie(response, "refresh_token");
 
-        // Invalidate Refresh Token cookie
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        // 2. Check if the user is a Google user
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser) {
+            // Redirect to Google Logout if they are an OIDC user
+            // This clears the Google session and brings them back to your frontend
+            String googleLogoutUrl = "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue=http://localhost:3000";
+            return ResponseEntity.status(HttpStatus.SEE_OTHER).header(HttpHeaders.LOCATION, googleLogoutUrl).build();
+        }
 
+        // 3. If standard user (Email/Password), just return OK
         return ResponseEntity.ok().build();
+    }
+
+    // Helper method to keep controller clean
+    private void clearCookie(HttpServletResponse response, String name) {
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(false) // Set to true in production
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
