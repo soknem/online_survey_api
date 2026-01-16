@@ -1,148 +1,115 @@
 package com.setec.online_survey.security;
 
-import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.setec.online_survey.util.KeyUtil;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.*;
-// NEW IMPORTS
-import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
+import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final TokenService tokenService;
+    private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
-    private final JwtToUserConverter jwtToUserConverter;
-    private final KeyUtil keyUtil;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Order(1)
+    public SecurityFilterChain authServerFilterChain(HttpSecurity http) throws Exception {
+        // Fix: Use 'new' if the static method is missing in your version
+        OAuth2AuthorizationServerConfigurer authServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
-    // --- NEW BEAN: Bearer Token Resolver for HTTP-ONLY COOKIE ---
-    @Bean
-    public BearerTokenResolver bearerTokenResolver() {
-        // Priority 1: Check for 'access_token' cookie
-        CookieRequestHeaderTokenResolver resolver = new CookieRequestHeaderTokenResolver("access_token");
-
-        // Priority 2 (Fallback): Check standard Authorization header
-        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
-        delegate.setAllowFormEncodedBodyParameter(false);
-        delegate.setAllowUriQueryParameter(false); // Typically keep false for security
-        resolver.setDelegate(delegate);
-
-        return resolver;
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(corsConfigurer->{})
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToUserConverter))
-                        // --- MODIFIED: Use the new resolver to check cookies ---
-                        .bearerTokenResolver(bearerTokenResolver())
-                )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-                )
-                .authorizeHttpRequests(auth -> auth
-                        // Allow auth endpoints, swagger, and static resources
-                        .requestMatchers(HttpMethod.GET,"/api/v1/surveys/share/**").permitAll()
-                        .requestMatchers("/api/v1/files/**","/api/v1/qrcodes/**").permitAll()
-                        .requestMatchers("/api/v1/surveys/submit/**","/api/v1/surveys/submit").permitAll()
-                        .requestMatchers("/api/v1/auth/**","/ui/**", "/swagger-ui/**", "/v3/api-docs/**","/api/v1/users/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+        http.with(authServerConfigurer, (authorizationServer) ->
+                authorizationServer.oidc(Customizer.withDefaults())
+        );
 
         return http.build();
     }
 
-    // --- JWT Encoder/Decoder Beans remain the same ---
-
     @Bean
-    @Qualifier("jwtRefreshTokenEncoder")
-    JwtEncoder jwtRefreshTokenEncoder() {
-        JWK jwk = new RSAKey.Builder(keyUtil.getRefreshTokenPublicKey())
-                .privateKey(keyUtil.getRefreshTokenPrivateKey())
-                .build();
-        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
-        return new NimbusJwtEncoder(jwkSource);
+    @Order(2)
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**", "/oauth2/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
+                        .successHandler((req, res, auth) -> {
+                            tokenService.setTokensAsCookies(auth, res);
+                            res.sendRedirect("http://localhost:3000/dashboard");
+                        })
+                )
+                .oauth2ResourceServer(oauth -> oauth
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToken -> {
+                            // Unified Converter logic
+                            UserDetails details = userDetailsService.loadUserByUsername(jwtToken.getSubject());
+                            return new UsernamePasswordAuthenticationToken(details, jwtToken, details.getAuthorities());
+                        }))
+                        .bearerTokenResolver(request -> {
+                            // Unified Cookie logic
+                            if (request.getCookies() == null) return null;
+                            return Arrays.stream(request.getCookies())
+                                    .filter(c -> "access_token".equals(c.getName()))
+                                    .map(Cookie::getValue).findFirst().orElse(null);
+                        })
+                );
+        return http.build();
     }
 
-
     @Bean
-    @Qualifier("jwtRefreshTokenDecoder")
-    JwtDecoder jwtRefreshTokenDecoder() {
-        return NimbusJwtDecoder.withPublicKey(keyUtil.getRefreshTokenPublicKey()).build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
-
     @Bean
-    @Primary
-    JwtEncoder jwtAccessTokenEncoder() {
-        JWK jwk = new RSAKey.Builder(keyUtil.getAccessTokenPublicKey())
-                .privateKey(keyUtil.getAccessTokenPrivateKey())
-                .build();
-        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
-        return new NimbusJwtEncoder(jwkSource);
+    public JWKSource<SecurityContext> jwkSource() {
+        KeyPair keyPair = generateRsaKey();
+        RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+                .privateKey((RSAPrivateKey) keyPair.getPrivate())
+                .keyID(UUID.randomUUID().toString()).build();
+        return new ImmutableJWKSet<>(new JWKSet(rsaKey));
     }
 
-
-    @Bean
-    @Primary
-    JwtDecoder jwtAccessTokenDecoder() {
-        return NimbusJwtDecoder.withPublicKey(keyUtil.getAccessTokenPublicKey()).build();
+    private static KeyPair generateRsaKey() {
+        try {
+            KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+            gen.initialize(2048);
+            return gen.generateKeyPair();
+        } catch (Exception ex) { throw new IllegalStateException(ex); }
     }
 
+    @Bean public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwk) { return new NimbusJwtEncoder(jwk); }
 
-    @Bean
-    @Qualifier("refreshTokenAuthProvider")
-    JwtAuthenticationProvider refreshTokenAuthProvider() {
-        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtRefreshTokenDecoder());
-        provider.setJwtAuthenticationConverter(jwtToUserConverter);
-        return provider;
+    // Manual Decoder setup to be safe across versions
+    @Bean public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return NimbusJwtDecoder.withPublicKey((RSAPublicKey) generateRsaKey().getPublic()).build();
     }
 }

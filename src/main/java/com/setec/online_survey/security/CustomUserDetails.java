@@ -5,42 +5,27 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class CustomUserDetails implements UserDetails {
-
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class CustomUserDetails implements UserDetails, OAuth2User {
     private User user;
+    private Map<String, Object> attributes;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public CustomUserDetails(User user) { this.user = user; }
+
+    @Override public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(user.getRole().getAuthority()));
     }
-
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
-
-    @Override
-    public String getUsername() {
-        return user.getEmail(); // or username if you prefer
-    }
-
-    public String getUuid() {
-        return user.getUuid();
-    }
-
-    // Optional helper
-    public Set<String> getRoles() {
-        return Set.of(user.getRole().getAuthority().replace("ROLE_", ""));
-    }
+    @Override public String getPassword() { return user.getPassword(); }
+    @Override public String getUsername() { return user.getEmail(); }
+    @Override public String getName() { return user.getEmail(); }
+    @Override public Map<String, Object> getAttributes() { return attributes; }
+    public String getUuid() { return user.getUuid(); }
 
     @Override public boolean isAccountNonExpired() { return user.getIsAccountNonExpired(); }
     @Override public boolean isAccountNonLocked() { return user.getIsAccountNonLocked(); }

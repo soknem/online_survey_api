@@ -1,19 +1,49 @@
 server:
   port: 8080
+
 spring:
   application:
     name: online_survey
   config:
     import: "optional:file:.env[.properties]"
-  servlet: # this is for file upload
+
+  servlet:
     multipart:
       max-file-size: 1000MB
       max-request-size: 5000MB
+
+  security:
+    oauth2:
+      # 1. This app as a CLIENT (talking to Google)
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+      # 2. This app as the AUTHORIZATION SERVER (Issuing your own JWTs)
+      authorizationserver:
+        issuer: http://localhost:8080
+
+      # 3. This app as a RESOURCE SERVER (Validating its own JWTs)
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080
+
   datasource:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
     url: jdbc:oracle:thin:@${DB_HOST}:${DB_PORT}/${DB_NAME}
+
   jpa:
     show-sql: true
     hibernate:
@@ -36,6 +66,7 @@ spring:
           starttls:
             enable: true
             required: true
+
   profiles:
     active: dev
   ai:
@@ -83,22 +114,3 @@ springdoc:
 services:
   file-service:
     url: https://resource.supersurvey.live
-
-#logging:
-#  level:
-#    org.hibernate.SQL: DEBUG
-#    org.hibernate.orm.jdbc.bind: TRACE
-#    org.springframework.jdbc.core: DEBUG
-#    root: debug
-#    org.springframework.web: debug
-#    org.springframework.security: debug
-#    com.online_survey.survey: debug
-#    org.springframework.mail: debug
-#    org.hibernate.engine.internal.Profiler: debug
-
-# This is for the access token
-ACCESS_TOKEN_PRIVATE_KEY_PATH: ${ACT_PRIVATE}
-ACCESS_TOKEN_PUBLIC_KEY_PATH: ${ACT_PUBLIC}
-# This is for the refresh token
-REFRESH_TOKEN_PRIVATE_KEY_PATH: ${RET_PRIVATE}
-REFRESH_TOKEN_PUBLIC_KEY_PATH: ${RET_PUBLIC}
