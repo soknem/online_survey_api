@@ -3,6 +3,8 @@
 FROM gradle:8.14-jdk21-alpine AS builder
 WORKDIR /app
 
+RUN apk add --no-cache gcompat libgcc libstdc++
+
 # Copy the project files
 COPY . .
 
