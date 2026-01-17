@@ -62,6 +62,8 @@ services:
     volumes:
       - '/home/media:/home/media'
       - './access-refresh-token-keys:/keys'
+    env_file:
+      - .env
     healthcheck:
       # We check port 8888 because that is the internal server port
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
