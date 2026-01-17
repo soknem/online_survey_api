@@ -28,6 +28,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
+ import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+ import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -46,6 +50,21 @@ public class SecurityConfig {
 
     @Value("${spring.security.oauth2.client.registration.google.client-secret:secret}")
     private String clientSecret;
+
+    @Bean
+    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+
+        DefaultOAuth2AuthorizationRequestResolver resolver =
+                new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+
+        // This forces the "prompt" parameter into the request sent to Google
+        resolver.setAuthorizationRequestCustomizer(customizer ->
+                customizer.additionalParameters(params -> params.put("prompt", "select_account"))
+        );
+
+        return resolver;
+    }
 
     @Bean
     @Order(1)
@@ -69,7 +88,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http,ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
@@ -78,11 +97,15 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
+                        // ADD THIS LINE BELOW
+                        .authorizationEndpoint(auth -> auth
+                                .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
+                        )
                         .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
                         .successHandler((req, res, auth) -> {
-                            // Uses the overloaded method we created in TokenService
                             tokenService.setTokensAsCookies(auth, res);
-                            res.sendRedirect("http://localhost:3000/dashboard");
+                            // Redirect to Dashboard, not Logout!
+                            res.sendRedirect("http://localhost:3000/logout");
                         })
                 )
                 .oauth2ResourceServer(oauth -> oauth

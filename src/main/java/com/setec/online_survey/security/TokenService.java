@@ -32,26 +32,28 @@ public class TokenService {
         Object principal = auth.getPrincipal();
         String username;
         String uuid = "";
+        String roles;
 
-        // Handle Google / OIDC User
-        if (principal instanceof OidcUser oidcUser) {
-            username = oidcUser.getEmail();
-            // If your CustomOAuth2UserService adds the DB UUID to attributes, get it here
-            uuid = oidcUser.getAttribute("uuid") != null ? oidcUser.getAttribute("uuid").toString() : "";
-        }
-        // Handle Standard DB User
-        else if (principal instanceof CustomUserDetails userDetails) {
+        // 1. Unified Extraction from CustomUserDetails
+        if (principal instanceof CustomUserDetails userDetails) {
             username = userDetails.getUsername();
-            uuid = userDetails.getUuid();
+            uuid = userDetails.getUuid(); // Pulls from your User Entity
+            // Dynamically get roles from the user object (e.g., ROLE_USER, ROLE_ADMIN)
+            roles = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(" "));
+        }
+        // 2. Fallback for Google if CustomOAuth2UserService hasn't run yet
+        else if (principal instanceof OidcUser oidcUser) {
+            username = oidcUser.getEmail();
+            roles = "ROLE_USER"; // Default for new social users
         }
         else {
-            username = principal.toString();
+            username = auth.getName();
+            roles = "ROLE_USER";
         }
 
-        String roles = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
-
+        // 3. Generate tokens with consistent claims
         String accessToken = generateToken(username, uuid, roles, Duration.ofMinutes(15));
         String refreshToken = generateToken(username, uuid, null, Duration.ofDays(3));
 
@@ -80,6 +82,8 @@ public class TokenService {
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims.build())).getTokenValue();
     }
+
+
 
     private String buildCookie(String name, String value, long maxAge) {
         return ResponseCookie.from(name, value)
