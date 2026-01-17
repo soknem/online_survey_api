@@ -120,3 +120,5 @@ security:
   sendRedirect: ${SEND_REDIRECT_URI}
   redirectUri: ${REDIRECT_URI}
   postLogoutRedirectUri: ${POST_LOGOUT_REDIRECT_URI}
+  clientSecret: ${GOOGLE_CLIENT_SECRET}
+  clientId: ${GOOGLE_CLIENT_ID}

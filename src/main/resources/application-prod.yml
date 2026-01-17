@@ -11,7 +11,7 @@ ISSUER_URI: https://sa-api.supersurvey.live
 #REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
 
 SEND_REDIRECT_URI: https://supersurvey.live
-REDIRECT_URI: https://sa-api.supersurvey.live/login/oauth2/code/admin
+REDIRECT_URI: https://sa-api.supersurvey.live/login/oauth2/code/google
 POST_LOGOUT_REDIRECT_URI: https://sa-api.supersurvey.live
 
 #ACT_PRIVATE: access-refresh-token-keys/access-token-private.key

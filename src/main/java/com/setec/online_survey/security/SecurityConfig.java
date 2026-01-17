@@ -61,11 +61,10 @@ public class SecurityConfig {
     @Value("${security.sendRedirect}")
     private String sendRedirect;
 
-    // Use default values if properties are missing during test/startup
-    @Value("${spring.security.oauth2.client.registration.google.client-id:admin}")
+    @Value("${security.clientId}")
     private String clientId;
 
-    @Value("${spring.security.oauth2.client.registration.google.client-secret:secret}")
+    @Value("${security.clientSecret}")
     private String clientSecret;
 
     @Bean
