@@ -23,7 +23,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
         String email = oAuth2User.getAttribute("email");
-        log.info("KKSS"+email);
+      //  log.info("KKSS"+email);
 
         User user = userRepository.findUserByEmail(email).orElseGet(() -> {
             User newUser = new User();
@@ -36,7 +36,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newUser.setIsCredentialsNonExpired(true);
             newUser.setIsDeleted(false);
             newUser.setRole(UserRole.ROLE_USER);
-            log.info("SKSK"+newUser.getEmail());
+           // log.info("SKSK"+newUser.getEmail());
             return userRepository.save(newUser);
 
         });

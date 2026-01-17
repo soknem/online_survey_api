@@ -4,11 +4,15 @@ DB_HOST: localhost
 DB_PORT: 1521
 DB_NAME: orcl
 
-ISSUER_URI: http://localhost:9090
-AUTHORIZATION_URI: http://localhost:9090/oauth2/authorize
-TOKEN_URI: http://localhost:9090/oauth2/token
+ISSUER_URI: http://localhost:8080
+#AUTHORIZATION_URI: http://localhost:9090/oauth2/authorize
+#TOKEN_URI: http://localhost:9090/oauth2/token
 #USER_INFO_URI: http://localhost:9090/oauth2/userinfo
-REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
+#REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
+
+SEND_REDIRECT_URI: http://localhost:3000/logout
+REDIRECT_URI: http://localhost:8080/login/oauth2/code/admin
+POST_LOGOUT_REDIRECT_URI: http://localhost:8080/
 
 #SECURITY_URI: lb://security-service
 #CONTENT_DISCOVERY_URI: lb://content-discovery-service
@@ -22,11 +26,11 @@ REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
 #DEFAULT_ZONE: http://localhost:8761/eureka
 #SERVER_LOGOUT_URL: http://localhost:9090/logout
 
-ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
-ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
-# This is for the refresh token
-RET_PRIVATE: access-refresh-token-keys/refresh-token-private.key
-RET_PUBLIC: access-refresh-token-keys/refresh-token-public.key
+#ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
+#ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
+## This is for the refresh token
+#RET_PRIVATE: access-refresh-token-keys/refresh-token-private.key
+#RET_PUBLIC: access-refresh-token-keys/refresh-token-public.key
 
 MAIL_USERNAME: sokname56@gmail.com
 MAIL_PASSWORD: tcps zgvu rnsf klrf

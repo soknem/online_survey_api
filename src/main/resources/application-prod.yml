@@ -4,12 +4,21 @@ DB_HOST: oracle-free
 DB_PORT: 1521
 DB_NAME: Z
 
+ISSUER_URI: https://sa-api.supersurvey.live
+#AUTHORIZATION_URI: http://localhost:9090/oauth2/authorize
+#TOKEN_URI: http://localhost:9090/oauth2/token
+#USER_INFO_URI: http://localhost:9090/oauth2/userinfo
+#REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
 
-ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
-ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
-# This is for the refresh token
-RET_PRIVATE: access-refresh-token-keys/refresh-token-private.key
-RET_PUBLIC: access-refresh-token-keys/refresh-token-public.key
+SEND_REDIRECT_URI: https://supersurvey.live
+REDIRECT_URI: https://sa-api.supersurvey.live/login/oauth2/code/admin
+POST_LOGOUT_REDIRECT_URI: https://sa-api.supersurvey.live
+
+#ACT_PRIVATE: access-refresh-token-keys/access-token-private.key
+#ACT_PUBLIC: access-refresh-token-keys/access-token-public.key
+## This is for the refresh token
+#RET_PRIVATE: access-refresh-token-keys/refresh-token-private.key
+#RET_PUBLIC: access-refresh-token-keys/refresh-token-public.key
 
 MAIL_USERNAME: sokname56@gmail.com
 MAIL_PASSWORD: tcps zgvu rnsf klrf

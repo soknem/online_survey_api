@@ -31,12 +31,13 @@ spring:
 
       # 2. This app as the AUTHORIZATION SERVER (Issuing your own JWTs)
       authorizationserver:
-        issuer: http://localhost:8080
+#        issuer: http://localhost:8080
+        issuer: ${ISSUER_URI}
 
       # 3. This app as a RESOURCE SERVER (Validating its own JWTs)
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080
+          issuer-uri: ${ISSUER_URI}
 
   datasource:
     username: ${DB_USERNAME}
@@ -114,3 +115,8 @@ springdoc:
 services:
   file-service:
     url: https://resource.supersurvey.live
+security:
+  issuer: ${ISSUER_URI}
+  sendRedirect: ${SEND_REDIRECT_URI}
+  redirectUri: ${REDIRECT_URI}
+  postLogoutRedirectUri: ${POST_LOGOUT_REDIRECT_URI}

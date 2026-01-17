@@ -23,7 +23,7 @@ public class User extends Auditable<String> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+   // @Column(nullable = false, unique = true, length = 100)
     @Size(max = 100)
     private String password;
 

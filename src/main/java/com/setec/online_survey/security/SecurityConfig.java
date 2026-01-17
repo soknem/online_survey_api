@@ -16,9 +16,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -32,6 +36,7 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
  import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
  import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 
+import java.awt.*;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -43,6 +48,18 @@ public class SecurityConfig {
     private final TokenService tokenService;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
+
+    @Value("${security.issuer}")
+    private String issuer_uri;
+
+    @Value("${security.postLogoutRedirectUri}")
+    private String postLogoutRedirectUri;
+
+    @Value("${security.redirectUri}")
+    private String redirectUri;
+
+    @Value("${security.sendRedirect}")
+    private String sendRedirect;
 
     // Use default values if properties are missing during test/startup
     @Value("${spring.security.oauth2.client.registration.google.client-id:admin}")
@@ -97,15 +114,18 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        // ADD THIS LINE BELOW
                         .authorizationEndpoint(auth -> auth
                                 .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
                         )
-                        .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
+                        .userInfoEndpoint(ui -> ui
+                                // This covers standard OAuth2
+                                .userService(customOAuth2UserService)
+                                // This covers Google (OIDC providers)
+                                .oidcUserService(customOidcUserService())
+                        )
                         .successHandler((req, res, auth) -> {
                             tokenService.setTokensAsCookies(auth, res);
-                            // Redirect to Dashboard, not Logout!
-                            res.sendRedirect("http://localhost:3000/logout");
+                            res.sendRedirect(sendRedirect);
                         })
                 )
                 .oauth2ResourceServer(oauth -> oauth
@@ -139,8 +159,8 @@ public class SecurityConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://localhost:8080/login/oauth2/code/admin")
-                .postLogoutRedirectUri("http://localhost:8080/")
+                .redirectUri(redirectUri)
+                .postLogoutRedirectUri(postLogoutRedirectUri)
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("email")
@@ -153,7 +173,15 @@ public class SecurityConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:8080")
+//                .issuer("http://localhost:8080")
+                .issuer(issuer_uri)
                 .build();
+    }
+
+    private OAuth2UserService<OidcUserRequest, OidcUser> customOidcUserService() {
+        return userRequest -> {
+            // Now this returns a CustomUserDetails which IS an OidcUser
+            return (OidcUser) customOAuth2UserService.loadUser(userRequest);
+        };
     }
 }
