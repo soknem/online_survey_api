@@ -3,8 +3,6 @@
 FROM gradle:8.14-jdk21-alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache gcompat libgcc libstdc++
-
 # Copy the project files
 COPY . .
 
@@ -16,6 +14,8 @@ RUN gradle build --no-daemon -x test
 # Use eclipse-temurin JRE (Runtime only) to keep the image small
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+
+RUN apk add --no-cache gcompat libgcc libstdc++
 
 # Copy the built jar from the builder stage
 # Note: Gradle usually builds two jars. We use a wildcard but ensure
