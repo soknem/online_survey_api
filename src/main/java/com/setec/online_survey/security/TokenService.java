@@ -3,6 +3,7 @@ package com.setec.online_survey.security;
 import com.setec.online_survey.features.auth.dto.TokenPair;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 public class TokenService {
 
     private final JwtEncoder jwtEncoder;
+    @Value("${security.issuer}")
+    private String issuer_uri;
 
     public void setTokensAsCookies(Authentication auth, HttpServletResponse response) {
         TokenPair tokens = generateTokenPair(auth);
@@ -70,7 +73,7 @@ public class TokenService {
     private String generateToken(String username, String uuid, String roles, Duration duration) {
         Instant now = Instant.now();
         JwtClaimsSet.Builder claims = JwtClaimsSet.builder()
-                .issuer("http://localhost:8080")
+                .issuer(issuer_uri)
                 .issuedAt(now)
                 .expiresAt(now.plus(duration))
                 .subject(username)
