@@ -10,7 +10,7 @@ ISSUER_URI: https://sa-api.supersurvey.live
 #USER_INFO_URI: http://localhost:9090/oauth2/userinfo
 #REDIRECT_URI: http://localhost:8000/login/oauth2/code/admin
 
-SEND_REDIRECT_URI: https://supersurvey.live
+SEND_REDIRECT_URI: https://supersurvey.live/user
 REDIRECT_URI: https://sa-api.supersurvey.live/login/oauth2/code/google
 POST_LOGOUT_REDIRECT_URI: https://sa-api.supersurvey.live
 
