@@ -91,6 +91,7 @@ public class SecurityConfig {
         http
                 // This ensures the chain ONLY looks at OAuth2 Auth Server endpoints
                 .securityMatcher(authServerConfigurer.getEndpointsMatcher())
+                .cors(AbstractHttpConfigurer::disable)
                 .with(authServerConfigurer, (authorizationServer) ->
                         authorizationServer.oidc(Customizer.withDefaults())
                 )
@@ -154,6 +155,7 @@ public class SecurityConfig {
             ClientRegistrationRepository clientRegistrationRepository) throws Exception {
 
         http
+                .cors(AbstractHttpConfigurer::disable)
                 .securityMatcher("/", "/login/**", "/oauth2/**", "/error", "/favicon.ico")
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated()
