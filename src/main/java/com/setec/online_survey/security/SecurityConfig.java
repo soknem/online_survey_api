@@ -1,6 +1,7 @@
 package com.setec.online_survey.security;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,11 +31,13 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
  import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
  import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
  import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+
 
 import java.awt.*;
 import java.util.Arrays;
@@ -109,8 +112,20 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/oauth2/**", "/login/**","/api/v1/auth/logout").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/oauth2/**", "/login/**","/api/v1/auth/logout","/api/v1/test/send-mail").permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .defaultAuthenticationEntryPointFor(
+                                (request, response, authException) -> {
+                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
+                                    response.getWriter().write(json);
+                                },
+                                // This Lambda replaces AntPathRequestMatcher
+                                request -> request.getServletPath().startsWith("/api/")
+                        )
                 )
                 .oauth2Login(oauth -> oauth
                         .authorizationEndpoint(auth -> auth
