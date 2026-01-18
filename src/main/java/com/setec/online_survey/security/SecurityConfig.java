@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -45,6 +46,7 @@ import java.util.UUID;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final TokenService tokenService;
@@ -112,6 +114,19 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
+    public SecurityFilterChain publicApiChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(3)
     public SecurityFilterChain appSecurityFilterChain(HttpSecurity http,ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http
                 .securityMatcher("/api/**")
@@ -124,18 +139,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail").permitAll()
                         .anyRequest().authenticated()
                 )
-//                .exceptionHandling(exceptions -> exceptions
-//                        .defaultAuthenticationEntryPointFor(
-//                                (request, response, authException) -> {
-//                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
-//                                    response.getWriter().write(json);
-//                                },
-//                                // This Lambda replaces AntPathRequestMatcher
-//                                request -> request.getServletPath().startsWith("/api/")
-//                        )
-//                )
+                .exceptionHandling(exceptions -> exceptions
+                        .defaultAuthenticationEntryPointFor(
+                                (request, response, authException) -> {
+                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
+                                    response.getWriter().write(json);
+                                },
+                                // This Lambda replaces AntPathRequestMatcher
+                                request -> request.getServletPath().startsWith("/api/")
+                        )
+                )
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToken -> {
                             UserDetails details = userDetailsService.loadUserByUsername(jwtToken.getSubject());
@@ -153,7 +168,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(3)
+    @Order(4)
     public SecurityFilterChain uiSecurityFilterChain(
             HttpSecurity http,
             ClientRegistrationRepository clientRegistrationRepository) throws Exception {
