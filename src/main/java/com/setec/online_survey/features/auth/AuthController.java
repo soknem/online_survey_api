@@ -21,21 +21,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @GetMapping("/me")
-    public UserProfileResponse getMyProfile(Authentication authentication) {
-
-        if(authentication==null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized");
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        assert userDetails != null;
-        return UserProfileResponse.builder()
-                .email(userDetails.getUsername())
-                .roles(userDetails.getRoles().toString())
-                .build();
-    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
