@@ -124,18 +124,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail").permitAll()
                         .anyRequest().authenticated()
                 )
-                .exceptionHandling(exceptions -> exceptions
-                        .defaultAuthenticationEntryPointFor(
-                                (request, response, authException) -> {
-                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
-                                    response.getWriter().write(json);
-                                },
-                                // This Lambda replaces AntPathRequestMatcher
-                                request -> request.getServletPath().startsWith("/api/")
-                        )
-                )
+//                .exceptionHandling(exceptions -> exceptions
+//                        .defaultAuthenticationEntryPointFor(
+//                                (request, response, authException) -> {
+//                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
+//                                    response.getWriter().write(json);
+//                                },
+//                                // This Lambda replaces AntPathRequestMatcher
+//                                request -> request.getServletPath().startsWith("/api/")
+//                        )
+//                )
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToken -> {
                             UserDetails details = userDetailsService.loadUserByUsername(jwtToken.getSubject());
