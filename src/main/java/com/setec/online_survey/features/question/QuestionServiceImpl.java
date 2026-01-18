@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,7 +93,14 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     public List<QuestionResponse> getAllQuestion() {
-        return questionRepository.findAll().stream().map(questionMapper::toQuestionResponse).toList();
+        return questionRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(
+                        Question::getOrderIndex,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .map(questionMapper::toQuestionResponse)
+                .toList();
     }
 
     @Override
