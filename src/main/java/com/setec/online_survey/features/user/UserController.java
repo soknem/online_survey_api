@@ -34,7 +34,7 @@ public class UserController {
     public UserProfileResponse getMyProfile(Authentication authentication) {
 
         if(authentication==null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized, please refresh or login again");
         }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
