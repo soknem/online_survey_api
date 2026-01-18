@@ -105,7 +105,10 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     public List<QuestionResponse> getQuestionBySurveyUuid(String surveyUuid) {
-        return questionRepository.findQuestionBySurveyUuid(surveyUuid).stream().map(questionMapper::toQuestionResponse).toList();
+        return questionRepository.findQuestionBySurveyUuid(surveyUuid)
+                .stream()
+                .map(questionMapper::toQuestionResponse)
+                .toList();
     }
 
     @Override
