@@ -91,10 +91,10 @@ public class TokenService {
     private String buildCookie(String name, String value, long maxAge) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(false) // Set to true if using HTTPS
+                .secure(true) // Set to true if using HTTPS
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build().toString();
     }
 }
