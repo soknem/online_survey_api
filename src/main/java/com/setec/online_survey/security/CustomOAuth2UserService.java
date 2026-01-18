@@ -36,6 +36,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newUser.setIsCredentialsNonExpired(true);
             newUser.setIsDeleted(false);
             newUser.setRole(UserRole.ROLE_USER);
+            newUser.setEmailVerified(true);
            // log.info("SKSK"+newUser.getEmail());
             return userRepository.save(newUser);
 
