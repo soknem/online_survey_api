@@ -94,7 +94,7 @@ public class TokenService {
                 .secure(true) // Set to true if using HTTPS
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build().toString();
     }
 }
