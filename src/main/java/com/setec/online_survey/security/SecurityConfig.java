@@ -23,7 +23,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -31,7 +30,6 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
  import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -90,16 +88,21 @@ public class SecurityConfig {
     public SecurityFilterChain authServerFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer authServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
-        // CRITICAL FIX: Only match OAuth2 Authorization Server endpoints here
-        http.securityMatcher(authServerConfigurer.getEndpointsMatcher())
+        http
+                // This ensures the chain ONLY looks at OAuth2 Auth Server endpoints
+                .securityMatcher(authServerConfigurer.getEndpointsMatcher())
                 .with(authServerConfigurer, (authorizationServer) ->
                         authorizationServer.oidc(Customizer.withDefaults())
                 )
+                // Add this to ensure that even within this chain, we only care about its specific needs
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .exceptionHandling((exceptions) -> exceptions
                         .defaultAuthenticationEntryPointFor(
-                                new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+                                // If it's not HTML, don't redirect to /login
+                                (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED),
+                                new MediaTypeRequestMatcher(MediaType.APPLICATION_JSON)
                         )
+                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 );
 
         return http.build();
@@ -109,10 +112,11 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain appSecurityFilterChain(HttpSecurity http,ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http
+                .securityMatcher("/api/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/oauth2/**", "/login/**","/api/v1/auth/logout","/api/v1/test/send-mail").permitAll()
+                        .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -126,21 +130,6 @@ public class SecurityConfig {
                                 // This Lambda replaces AntPathRequestMatcher
                                 request -> request.getServletPath().startsWith("/api/")
                         )
-                )
-                .oauth2Login(oauth -> oauth
-                        .authorizationEndpoint(auth -> auth
-                                .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
-                        )
-                        .userInfoEndpoint(ui -> ui
-                                // This covers standard OAuth2
-                                .userService(customOAuth2UserService)
-                                // This covers Google (OIDC providers)
-                                .oidcUserService(customOidcUserService())
-                        )
-                        .successHandler((req, res, auth) -> {
-                            tokenService.setTokensAsCookies(auth, res);
-                            res.sendRedirect(sendRedirect);
-                        })
                 )
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToken -> {
@@ -157,6 +146,36 @@ public class SecurityConfig {
                 );
         return http.build();
     }
+
+    @Bean
+    @Order(3)
+    public SecurityFilterChain uiSecurityFilterChain(
+            HttpSecurity http,
+            ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+
+        http
+                .securityMatcher("/", "/login/**", "/oauth2/**", "/error", "/favicon.ico")
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(auth -> auth
+                                .authorizationRequestResolver(
+                                        authorizationRequestResolver(clientRegistrationRepository))
+                        )
+                        .userInfoEndpoint(ui -> ui
+                                .userService(customOAuth2UserService)
+                                .oidcUserService(customOidcUserService())
+                        )
+                        .successHandler((req, res, auth) -> {
+                            tokenService.setTokensAsCookies(auth, res);
+                            res.sendRedirect(sendRedirect);
+                        })
+                );
+
+        return http.build();
+    }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

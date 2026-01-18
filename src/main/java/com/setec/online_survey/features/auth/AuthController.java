@@ -55,35 +55,29 @@ public class AuthController {
         return authService.refresh(request, response);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // 1. Clear local cookies by setting maxAge to 0
-        clearCookie(response, "access_token");
-        clearCookie(response, "refresh_token");
-
-        // This tells the browser to navigate back to your Next.js login page
-        return ResponseEntity.status(HttpStatus.OK)
-                .build();
-    }
-
-    private void clearCookie(HttpServletResponse response, String name) {
-
-        ResponseCookie cookie = ResponseCookie.from(name, "")
-
+    @PostMapping("/logout") // <--- NEW ENDPOINT
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        // Invalidate Access Token cookie (set maxAge to 0)
+        ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-
-                .secure(false) // Set to true in production
-
+                .secure(false)
                 .path("/")
-
                 .maxAge(0)
-
                 .sameSite("Lax")
-
                 .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        // Invalidate Refresh Token cookie
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
+        return ResponseEntity.ok().build();
     }
 
 }
