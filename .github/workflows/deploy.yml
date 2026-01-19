@@ -45,11 +45,14 @@ jobs:
             # 1. Move to project root on VM
             cd /home/${{ secrets.VM_USER }}/online_survey/sa_online_survey_api/
             
+            #pull from git
+            git pull
+            
             # 2. Pull new image
             docker compose pull online_survey
             
             # 3. Restart the service
-            docker compose up -d online_survey
+            docker compose up -d
             
             # 4. Cleanup
             docker image prune -f
