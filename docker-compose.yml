@@ -69,6 +69,5 @@ services:
 networks:
   survey-network:
     driver: bridge
-
 volumes:
   oracle_data:
