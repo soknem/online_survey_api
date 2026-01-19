@@ -17,7 +17,6 @@ services:
       - ./init-scripts:/opt/oracle/scripts/setup
     shm_size: '2gb'
     healthcheck:
-      # tnsping is built-in and doesn't need extra tools or passwords
       test: ["CMD-SHELL", "tnsping localhost:1521 || exit 1"]
       interval: 30s
       timeout: 10s
@@ -27,10 +26,8 @@ services:
   # --- Spring Boot API Service ---
   online_survey:
     container_name: 'sa-api'
-    image: asia-east1-docker.pkg.dev/strong-summer-481511-s6/my-survey-repo/backend:v1
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Use your Docker Hub image instead of building locally
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/survey-backend:latest
     restart: always
     networks:
       - survey-network
@@ -39,22 +36,20 @@ services:
         condition: service_healthy
     environment:
       - TZ=Asia/Bangkok
-      # These must match the ${} variables in your application.yml
       - DB_HOST=oracle-db
       - DB_PORT=1521
       - DB_NAME=FREEPDB1
       - DB_USERNAME=sa
       - DB_PASSWORD=sa
-      # Security Key Paths
       - ACT_PRIVATE=/keys/access-token-private.key
       - ACT_PUBLIC=/keys/access-token-public.key
       - RET_PRIVATE=/keys/refresh-token-private.key
       - RET_PUBLIC=/keys/refresh-token-public.key
-      # Mail Configuration
       - MAIL_USERNAME=sokname56@gmail.com
       - MAIL_PASSWORD=tcps zgvu rnsf klrf
       - MAIL_HOST=smtp.gmail.com
       - MAIL_HOST_PORT=587
+      # These will be read from the .env file on your VM
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
     ports:
@@ -65,7 +60,6 @@ services:
     env_file:
       - .env
     healthcheck:
-      # We check port 8888 because that is the internal server port
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
