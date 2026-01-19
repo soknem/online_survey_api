@@ -43,7 +43,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # 1. Move to project root on VM
-            cd /home/${{ secrets.VM_USER }}/your-project-folder
+            cd /home/${{ secrets.VM_USER }}/online_survey/sa_online_survey_api/
             
             # 2. Pull new image
             docker compose pull online_survey

@@ -8,7 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class BasedError<T> {
-
     private String code;
 
     // Detail error for user
