@@ -27,7 +27,7 @@ services:
   online_survey:
     container_name: 'sa-api'
     # Use your Docker Hub image instead of building locally
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/survey-backend:latest
+    image: ${DOCKER_USER}/survey-backend:latest
     restart: always
     networks:
       - survey-network

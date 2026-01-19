@@ -48,6 +48,8 @@ jobs:
             #pull from git
             git pull
             
+            export DOCKER_USER=${{ secrets.DOCKERHUB_USERNAME }}
+            
             # 2. Pull new image
             docker compose pull online_survey
             
