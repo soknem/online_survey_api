@@ -35,7 +35,7 @@ MINIO_ACCESS_KEY: minio
 base-uri: https://resource.supersurvey.live
 image-endpoint: /api/v1/files
 video-endpoint: /api/v1/files
-survey-share-url: http://localhost:3000/s/
+survey-share-url: http://localhost:3000/response/
 survey-base-url: https://supersurvey.live
 
 logo-path: static/images/logo.png

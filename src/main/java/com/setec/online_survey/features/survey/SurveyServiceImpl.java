@@ -69,7 +69,6 @@ public class SurveyServiceImpl implements SurveyService {
 
         survey.setUuid(UUID.randomUUID().toString());
         survey.setCreator(creator);
-        survey.setSurveyUrl(UUID.randomUUID().toString());
 
         surveyRepository.save(survey);
     }
@@ -142,7 +141,7 @@ public class SurveyServiceImpl implements SurveyService {
         String uuid = UUID.randomUUID().toString();
         String linkEndpoint = slg.slugify(survey.getTitle()) + uuid;
 
-        ShareResponse shareResponse = shareService.shareSurvey(new ShareRequest(linkEndpoint));
+            ShareResponse shareResponse = shareService.shareSurvey(new ShareRequest(linkEndpoint));
 
         String qrCodeFileName = shareResponse.qrCodeFileName();
         String qrCodeUrl = shareResponse.qrCodeUrl();

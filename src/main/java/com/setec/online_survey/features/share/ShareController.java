@@ -15,15 +15,15 @@ public class ShareController {
 
     private final ShareService shareService;
 
-    @PostMapping("/qr-code/generate")
-    public QrCodeResponse generateQR(@RequestBody @Valid QrCodeRequest qrCodeRequest) {
+//    @PostMapping("/qr-code/generate")
+//    public QrCodeResponse generateQR(@RequestBody @Valid QrCodeRequest qrCodeRequest) {
+//
+//        return shareService.generateAndUploadQRCode(qrCodeRequest);
+//    }
 
-        return shareService.generateAndUploadQRCode(qrCodeRequest);
-    }
-
-    @PostMapping("")
-    public ShareResponse share(@RequestBody @Valid ShareRequest shareRequest){
-
-        return shareService.shareSurvey(shareRequest);
-    }
+//    @PostMapping("")
+//    public ShareResponse share(@RequestBody @Valid ShareRequest shareRequest){
+//
+//        return shareService.shareSurvey(shareRequest);
+//    }
 }
