@@ -58,3 +58,35 @@ jobs:
             
             # 4. Cleanup
             docker image prune -f
+
+
+  notify:
+    needs: [build-and-push, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # --- STEP TO GENERATE DEPLOY DATE ---
+      - name: Get current date
+        id: date
+        run: echo "DEPLOY_DATE=$(date +'%d/%m/%Y %H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message_thread_id: ${{ secrets.TELEGRAM_TOPIC }}
+          format: markdown
+          message: |
+            🎉 *NEW ACTION!* 🎉 
+            ----------------------------------------
+            • *Project* : `API`
+            • *Domain* : `sa-api.supersurvey.live`
+            • *Repository* : `${{ github.repository }}`
+            • *Author* : `${{ github.actor }}`
+            • *Branch* : `${{ github.ref_name }}`
+            • *Status* : `${{ job.status == 'success' && '✅ SUCCESS' || '❌ FAILED' }}`
+            • *Deploy Date* : `${{ env.DEPLOY_DATE }}`
+            • *Message* : `${{ github.event.head_commit.message }}`
+            ----------------------------------------
+            [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
