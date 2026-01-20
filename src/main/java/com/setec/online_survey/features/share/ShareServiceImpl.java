@@ -103,7 +103,7 @@ public class ShareServiceImpl implements ShareService {
     @Override
     public ShareResponse shareSurvey(ShareRequest shareRequest) {
 
-        String url= baseUri+surveyShare +shareRequest.shareAlias();
+        String url= surveyShare +shareRequest.shareAlias();
 
         QrCodeResponse qrCodeResponse = generateAndUploadQRCode(new QrCodeRequest(url));
 
