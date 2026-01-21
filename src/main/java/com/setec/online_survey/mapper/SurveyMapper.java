@@ -21,7 +21,7 @@ public interface SurveyMapper {
     Survey fromSurveyRequest(SurveyRequest surveyRequest);
 
     SurveyResponse toSurveyResponse(Survey survey);
-
+    @Mapping(target = "questions", source = "questions")
     SurveyPublicResponse toSurveyPublicResponse(Survey survey, List<QuestionResponse> questions);
 
     MySurveyResponse toMySurveyResponse(Survey survey,Integer totalResponse, String thumbnail);
