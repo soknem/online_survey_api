@@ -1,6 +1,9 @@
 package com.setec.online_survey.features.survey.dto;
 
 import com.setec.online_survey.domain.SurveyType;
+import com.setec.online_survey.features.question.dto.QuestionResponse;
+
+import java.util.List;
 
 public record SurveyPublicResponse(
 
@@ -12,6 +15,8 @@ public record SurveyPublicResponse(
 
         String closeDate,
 
-        SurveyType surveyType
+        SurveyType surveyType,
+
+        List<QuestionResponse> questions
 ) {
 }

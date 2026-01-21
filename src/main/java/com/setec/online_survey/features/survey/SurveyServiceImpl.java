@@ -5,6 +5,8 @@ import com.setec.online_survey.base.BaseSpecification;
 import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.features.auth.dto.UserProfileResponse;
+import com.setec.online_survey.features.question.QuestionService;
+import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.share.ShareService;
 import com.setec.online_survey.features.share.dto.ShareRequest;
 import com.setec.online_survey.features.share.dto.ShareResponse;
@@ -43,6 +45,7 @@ public class SurveyServiceImpl implements SurveyService {
     private final UserRepository userRepository;
     private final ShareService shareService;
     private final BaseSpecification<Survey> baseSpecification;
+    private final QuestionService questionService;
 
     @Value("${media.base-uri}")
     private String baseUri;
@@ -161,6 +164,8 @@ public class SurveyServiceImpl implements SurveyService {
         Survey survey = surveyRepository.findSurveyBySurveyUrl(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("surveyUrl = %s has not been found", slug)));
 
+        List<QuestionResponse> questions = questionService.getQuestionBySurveyUuid(survey.getUuid());
+
         if (!survey.getIsPublic()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("survey not found"));
         }
@@ -168,7 +173,7 @@ public class SurveyServiceImpl implements SurveyService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("survey has been closed"));
         }
 
-        return surveyMapper.toSurveyPublicResponse(survey);
+        return surveyMapper.toSurveyPublicResponse(survey,questions);
     }
 
     @Override

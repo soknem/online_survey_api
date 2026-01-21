@@ -6,11 +6,14 @@ import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.features.option.dto.OptionRequest;
 import com.setec.online_survey.features.option.dto.OptionResponse;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
+import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.survey.dto.MySurveyResponse;
 import com.setec.online_survey.features.survey.dto.SurveyPublicResponse;
 import com.setec.online_survey.features.survey.dto.SurveyRequest;
 import com.setec.online_survey.features.survey.dto.SurveyResponse;
 import org.mapstruct.*;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface SurveyMapper {
@@ -19,7 +22,7 @@ public interface SurveyMapper {
 
     SurveyResponse toSurveyResponse(Survey survey);
 
-    SurveyPublicResponse toSurveyPublicResponse(Survey survey);
+    SurveyPublicResponse toSurveyPublicResponse(Survey survey, List<QuestionResponse> questions);
 
     MySurveyResponse toMySurveyResponse(Survey survey,Integer totalResponse, String thumbnail);
 
