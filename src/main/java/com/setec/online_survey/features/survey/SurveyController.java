@@ -59,8 +59,11 @@ public class SurveyController {
 
     @PostMapping("/share")
     @PreAuthorize("hasRole('USER')")
-    public SurveyShareResponse shareSurvey(@RequestBody SurveyShareRequest surveyShareRequest) {
-        return surveyService.shareSurvey(surveyShareRequest);
+    public SurveyShareResponse shareSurvey(@RequestBody SurveyShareRequest surveyShareRequest,
+                                           @RequestParam(defaultValue = "prod") String stg,
+                                           @RequestParam(defaultValue = "false") String isNew
+    ) {
+        return surveyService.shareSurvey(surveyShareRequest,stg,isNew);
     }
 
     @GetMapping("/share/{slug}")

@@ -36,6 +36,7 @@ base-uri: https://resource.supersurvey.live
 image-endpoint: /api/v1/files
 video-endpoint: /api/v1/files
 survey-share-url: http://localhost:3000/response/
+survey-share-url-prod: https://supersurvey.live/response/
 survey-base-url: https://supersurvey.live
 
 logo-path: static/images/logo.png

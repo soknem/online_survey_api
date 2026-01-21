@@ -23,7 +23,7 @@ public interface SurveyService {
 
      void surveyPublicStatus(String uuid);
 
-     SurveyShareResponse shareSurvey(SurveyShareRequest shareRequest);
+     SurveyShareResponse shareSurvey(SurveyShareRequest surveyShareRequest,String stg,String isNew);
 
      SurveyPublicResponse getShareSurvey(String slug);
 

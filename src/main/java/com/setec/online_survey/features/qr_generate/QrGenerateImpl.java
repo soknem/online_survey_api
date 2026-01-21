@@ -1,11 +1,11 @@
-package com.setec.online_survey.features.share;
+package com.setec.online_survey.features.qr_generate;
 
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.setec.online_survey.features.share.dto.*;
+import com.setec.online_survey.features.qr_generate.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class ShareServiceImpl implements ShareService {
+public class QrGenerateImpl implements QrGenerateService {
 
     private final RestClient restClient;
 
@@ -36,6 +36,9 @@ public class ShareServiceImpl implements ShareService {
     //endpoint that handle manage medias
     @Value("${media.survey-share}")
     private String surveyShare;
+
+    @Value("${media.survey-share-prod}")
+    private String surveyShareProd;
 
     @Value("${services.file-service.url}")
     private String fileServiceUrl;
@@ -98,18 +101,5 @@ public class ShareServiceImpl implements ShareService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate QR Code", e);
         }
-    }
-
-    @Override
-    public ShareResponse shareSurvey(ShareRequest shareRequest) {
-
-        String url= surveyShare +shareRequest.shareAlias();
-
-        QrCodeResponse qrCodeResponse = generateAndUploadQRCode(new QrCodeRequest(url));
-
-        String fileName = qrCodeResponse.fileName();
-        String qrUrl = qrCodeResponse.url();
-
-        return new ShareResponse(url,fileName,qrUrl);
     }
 }

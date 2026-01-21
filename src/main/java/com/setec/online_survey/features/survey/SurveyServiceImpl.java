@@ -4,17 +4,17 @@ import com.github.slugify.Slugify;
 import com.setec.online_survey.base.BaseSpecification;
 import com.setec.online_survey.domain.Survey;
 import com.setec.online_survey.domain.User;
-import com.setec.online_survey.features.auth.dto.UserProfileResponse;
+import com.setec.online_survey.features.qr_generate.QrGenerateService;
+import com.setec.online_survey.features.qr_generate.dto.QrCodeRequest;
+import com.setec.online_survey.features.qr_generate.dto.QrCodeResponse;
+import com.setec.online_survey.features.qr_generate.dto.QrGenerateResponse;
 import com.setec.online_survey.features.question.QuestionService;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
-import com.setec.online_survey.features.share.ShareService;
-import com.setec.online_survey.features.share.dto.ShareRequest;
-import com.setec.online_survey.features.share.dto.ShareResponse;
+import com.setec.online_survey.features.qr_generate.dto.ShareRequest;
 import com.setec.online_survey.features.survey.dto.*;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.mapper.SurveyMapper;
 import com.setec.online_survey.security.CustomUserDetails;
-import com.setec.online_survey.util.FilterUtils;
 import com.setec.online_survey.util.SortUtils;
 import com.setec.online_survey.util.SpecUtils;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -43,9 +40,16 @@ public class SurveyServiceImpl implements SurveyService {
     private final SurveyRepository surveyRepository;
     private final SurveyMapper surveyMapper;
     private final UserRepository userRepository;
-    private final ShareService shareService;
+    private final QrGenerateService qrGenerateService;
     private final BaseSpecification<Survey> baseSpecification;
     private final QuestionService questionService;
+
+    //endpoint that handle manage medias
+    @Value("${media.survey-share}")
+    private String surveyShare;
+
+    @Value("${media.survey-share-prod}")
+    private String surveyShareProd;
 
     @Value("${media.base-uri}")
     private String baseUri;
@@ -126,7 +130,7 @@ public class SurveyServiceImpl implements SurveyService {
 
 
     @Override
-    public SurveyShareResponse shareSurvey(SurveyShareRequest surveyShareRequest) {
+    public SurveyShareResponse shareSurvey(SurveyShareRequest surveyShareRequest,String stg,String isNew) {
 
         Survey survey = surveyRepository.findSurveyByUuid(surveyShareRequest.surveyUuid()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Survey =%s has not been found", surveyShareRequest.surveyUuid()))
@@ -140,18 +144,31 @@ public class SurveyServiceImpl implements SurveyService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Survey not yet public");
         }
 
-        final Slugify slg = Slugify.builder().build();
-        String uuid = UUID.randomUUID().toString();
-        String linkEndpoint = slg.slugify(survey.getTitle()) + uuid;
 
-            ShareResponse shareResponse = shareService.shareSurvey(new ShareRequest(linkEndpoint));
+        String linkEndpoint;
+        String qrCodeUrl;
+        String shareLink;
 
-        String qrCodeFileName = shareResponse.qrCodeFileName();
-        String qrCodeUrl = shareResponse.qrCodeUrl();
-        String shareLink = shareResponse.shareLink();
+        if(survey.getSurveyUrl() !=null && survey.getQrCodeUrl()!=null&&isNew.equalsIgnoreCase("false")){
+            linkEndpoint=survey.getSurveyUrl();
+            shareLink= (Objects.equals(stg, "prod") ? surveyShareProd :surveyShare)+linkEndpoint;
+            qrCodeUrl=survey.getQrCodeUrl();
 
-        survey.setSurveyUrl(linkEndpoint);
-        survey.setQrCodeUrl(qrCodeFileName);
+        }else{
+
+            final Slugify slg = Slugify.builder().build();
+            String uuid = UUID.randomUUID().toString();
+            linkEndpoint = slg.slugify(survey.getTitle()) + uuid;
+
+            shareLink= (Objects.equals(stg, "prod") ? surveyShareProd :surveyShare)+linkEndpoint;
+
+            QrCodeResponse qrGenerateResponse= qrGenerateService.generateAndUploadQRCode(new QrCodeRequest(shareLink));
+
+            qrCodeUrl = qrGenerateResponse.url();
+
+            survey.setSurveyUrl(linkEndpoint);
+            survey.setQrCodeUrl(qrCodeUrl);
+        }
 
         surveyRepository.save(survey);
 

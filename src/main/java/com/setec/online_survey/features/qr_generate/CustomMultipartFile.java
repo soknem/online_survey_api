@@ -1,4 +1,4 @@
-package com.setec.online_survey.features.share;
+package com.setec.online_survey.features.qr_generate;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.io.*;

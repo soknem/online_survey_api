@@ -1,4 +1,4 @@
-package com.setec.online_survey.features.share.dto;
+package com.setec.online_survey.features.qr_generate.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
