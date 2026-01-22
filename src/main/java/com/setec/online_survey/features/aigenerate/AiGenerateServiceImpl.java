@@ -57,7 +57,6 @@ public class AiGenerateServiceImpl implements AiGenerateService {
             default -> googleChatModel;
         };
 
-        // Determine correct options class based on the model type
         ChatOptions options = provider.equals("google")
                 ? GoogleGenAiChatOptions.builder().model(modelName).temperature(0.7).build()
                 : OpenAiChatOptions.builder().model(modelName).temperature(0.7).build();
@@ -65,24 +64,29 @@ public class AiGenerateServiceImpl implements AiGenerateService {
         return ChatClient.create(activeModel).prompt()
                 .options(options)
                 .user(u -> u.text("""
-                                # ROLE
-                                You are an expert Survey Designer fluent in both English and Khmer (Cambodian).
-                                            
-                                # SYSTEM INSTRUCTIONS
-                                1. Language Detection: If the user context ({prompt}) is in Khmer, provide all question text and labels in natural, polite Khmer.
-                                2. Script Integrity: For Khmer output, ensure correct Unicode script usage and avoid mixing with Thai or Lao scripts.
-                                3. Tone: Use a professional and encouraging tone (e.g., use "សូម" for requests in Khmer).
-                                4. Format: Return ONLY a valid JSON array. No conversational filler.
-                                            
-                                # SURVEY TASK
-                                - Title: {title}
-                                - Type: {type} (e.g., Multiple Choice, Rating, Open Ended)
-                                - Number of Questions: {count}
-                                - Goal/Context: {prompt}
-                                            
-                                # JSON STRUCTURE REQUIREMENT
-                                Return an array of objects matching the 'AiQuestionResponse' schema.
-                                """)
+                            # ROLE
+                            You are an expert Survey Designer fluent in both English and Khmer.
+                                        
+                            # LANGUAGE LOGIC (STRICT)
+                            1. MANDATORY OVERRIDE: If the user explicitly asks for a language in the {prompt} (e.g., "Write in Khmer" or "Use English"), you MUST use that language.
+                            2. AUTO-DETECTION: If no language is specified in the {prompt}, detect the language used in the {prompt} and {title}.
+                               - If {prompt} is in English -> Response must be in English.
+                               - If {prompt} is in Khmer -> Response must be in Khmer.
+                            3. SCRIPT: For Khmer, use correct Unicode and professional "សូម" (polite) tone.
+                                        
+                            # SYSTEM INSTRUCTIONS
+                            - Tone: Professional, encouraging, and clear.
+                            - Format: Return ONLY a valid JSON array. No conversational filler, no markdown blocks like ```json.
+                                        
+                            # SURVEY TASK
+                            - Title: {title}
+                            - Type: {type}
+                            - Number of Questions: {count}
+                            - Goal/Context: {prompt}
+                                        
+                            # JSON STRUCTURE REQUIREMENT
+                            Return an array of objects matching the 'AiQuestionResponse' schema.
+                            """)
                         .param("title", request.surveyTitle())
                         .param("type", request.surveyType())
                         .param("prompt", request.prompt())
