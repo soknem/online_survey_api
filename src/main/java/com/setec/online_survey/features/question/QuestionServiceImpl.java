@@ -3,6 +3,7 @@ package com.setec.online_survey.features.question;
 import com.setec.online_survey.domain.Option;
 import com.setec.online_survey.domain.Question;
 import com.setec.online_survey.domain.Survey;
+import com.setec.online_survey.features.option.dto.OptionRequest;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.survey.SurveyRepository;
@@ -30,58 +31,88 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     @Transactional
-    public void updateSurveyQuestions(List<QuestionRequest> questionRequests, String surveyUuid) {
-
-
-        // 1. Find the parent Survey
+    public List<QuestionResponse>  updateSurveyQuestions(List<QuestionRequest> questionRequests, String surveyUuid) {
         Survey survey = surveyRepository.findSurveyByUuid(surveyUuid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        String.format("survey = %s has not been found", surveyUuid)));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Survey not found"));
 
-        // 2. Map and Update Questions
-        Set<Question> updatedQuestions = questionRequests.stream()
-                .map(request -> {
-                    Question question = questionRepository.findQuestionByUuid(request.uuid())
-                            .orElseGet(() -> {
-                                Question newQ = questionMapper.fromQuestionRequest(request);
-                                newQ.setUuid(UUID.randomUUID().toString());
-                                return newQ;
-                            });
+        // 1. Map existing questions for lookup
+        Map<String, Question> existingQuestionMap = survey.getQuestions().stream()
+                .collect(Collectors.toMap(Question::getUuid, q -> q));
 
-                    // Update basic fields via mapper
-                    questionMapper.updateQuestion(question, request);
-                    question.setSurvey(survey);
+        Set<Question> finalQuestions = new HashSet<>();
 
-                    // 3. Handle Options (Orphan Removal for Options)
-                    var existingOptions = question.getOptions();
-                    existingOptions.clear(); // Clears old options from DB due to orphanRemoval=true
+        for (QuestionRequest request : questionRequests) {
+            Question question;
 
-                    if (request.options() != null) {
-                        request.options().forEach(optRequest -> {
+            if (request.uuid() != null) {
+                // If UUID is provided, it MUST exist in this specific survey
+                if (!existingQuestionMap.containsKey(request.uuid())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid Question UUID: " + request.uuid() + ". This question does not belong to the survey or does not exist.");
+                }
+                question = existingQuestionMap.get(request.uuid());
+                questionMapper.updateQuestion(question, request);
+            } else {
+                // Truly new question
+                question = questionMapper.fromQuestionRequest(request);
+                question.setUuid(UUID.randomUUID().toString());
+                question.setSurvey(survey);
+            }
 
-                            Option option = optionMapper.fromOptionRequest(optRequest);
+            // 2. Handle Options with same validation logic
+            updateOptions(question, request.options());
 
-                            if (option.getUuid() == null) {
-                                option.setUuid(UUID.randomUUID().toString());
-                            }
-                            question.addOption(option); // Crucial: sets option.setQuestion(question)
-                        });
-                    }
-                    return question;
-                })
-                .collect(Collectors.toSet());
+            finalQuestions.add(question);
+        }
 
-        // 4. SYNC Questions with Survey (Orphan Removal for Questions)
-        // First, clear the existing collection to trigger orphan removal for deleted questions
-        survey.getQuestions().clear();
-        // Then add the updated/new set
-        survey.getQuestions().addAll(updatedQuestions);
+        // 3. Sync and Save
+        survey.getQuestions().retainAll(finalQuestions);
+        survey.getQuestions().addAll(finalQuestions);
 
-        // 5. Save the Parent (Survey)
-        // Because of CascadeType.ALL, saving the survey saves all questions and options
         surveyRepository.save(survey);
+
+        return getQuestionBySurveyUuid(surveyUuid);
     }
 
+    private void updateOptions(Question question, List<OptionRequest> optionRequests) {
+        // If request has no options, clear existing ones
+        if (optionRequests == null || optionRequests.isEmpty()) {
+            if (question.getOptions() != null) {
+                question.getOptions().clear();
+            }
+            return;
+        }
+
+        // Map existing options for this specific question
+        Map<String, Option> existingOptionMap = (question.getOptions() == null) ? Map.of() :
+                question.getOptions().stream()
+                        .collect(Collectors.toMap(Option::getUuid, o -> o));
+
+        Set<Option> finalOptions = new HashSet<>();
+
+        for (OptionRequest optReq : optionRequests) {
+            Option option;
+            if (optReq.uuid() != null) {
+                // If UUID is provided, it MUST exist in this specific question
+                if (!existingOptionMap.containsKey(optReq.uuid())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid Option UUID: " + optReq.uuid() + ". This option does not belong to the question or does not exist.");
+                }
+                option = existingOptionMap.get(optReq.uuid());
+                optionMapper.updateOption(option, optReq);
+            } else {
+                // Truly new option
+                option = optionMapper.fromOptionRequest(optReq);
+                option.setUuid(UUID.randomUUID().toString());
+                option.setQuestion(question); // Explicitly set the back-reference for Oracle
+            }
+            finalOptions.add(option);
+        }
+
+        // Hibernate orphanRemoval sync
+        question.getOptions().retainAll(finalOptions);
+        question.getOptions().addAll(finalOptions);
+    }
     @Override
     public QuestionResponse getQuestionByUuid(String uuid) {
 

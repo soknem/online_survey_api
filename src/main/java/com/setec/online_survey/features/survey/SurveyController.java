@@ -75,8 +75,8 @@ public class SurveyController {
 
     @PatchMapping("/{surveyUuid}/question")
     @PreAuthorize("hasRole('USER')")
-    public void editSurveyQuestion(@RequestBody List<QuestionRequest> questionRequests, @PathVariable String surveyUuid) {
-        questionService.updateSurveyQuestions(questionRequests, surveyUuid);
+    public List<QuestionResponse> editSurveyQuestion(@RequestBody List<QuestionRequest> questionRequests, @PathVariable String surveyUuid) {
+       return questionService.updateSurveyQuestions(questionRequests, surveyUuid);
     }
 
     @GetMapping("/{uuid}/question")

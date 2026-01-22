@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface QuestionService {
 
-    void updateSurveyQuestions(List<QuestionRequest> questionRequest,String surveyUuid);
+    List<QuestionResponse> updateSurveyQuestions(List<QuestionRequest> questionRequest,String surveyUuid);
 
     QuestionResponse getQuestionByUuid(String uuid);
 
