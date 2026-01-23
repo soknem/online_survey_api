@@ -86,6 +86,7 @@ public class QuestionServiceImpl implements QuestionService{
         // Map existing options for this specific question
         Map<String, Option> existingOptionMap = (question.getOptions() == null) ? Map.of() :
                 question.getOptions().stream()
+                        .filter(o -> o.getUuid() != null)
                         .collect(Collectors.toMap(Option::getUuid, o -> o));
 
         Set<Option> finalOptions = new HashSet<>();
