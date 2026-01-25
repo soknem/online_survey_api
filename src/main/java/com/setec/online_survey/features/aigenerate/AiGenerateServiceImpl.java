@@ -87,8 +87,8 @@ public class AiGenerateServiceImpl implements AiGenerateService {
                             # JSON STRUCTURE REQUIREMENT
                             Return an array of objects matching the 'AiQuestionResponse' schema.
                             """)
-                        .param("title", request.surveyTitle())
-                        .param("type", request.surveyType())
+                        .param("title", request.surveyTitle() != null ? request.surveyTitle() : "Untitled Survey")
+                        .param("type", request.surveyType() != null ? request.surveyType() : "General")
                         .param("prompt", request.prompt())
                         .param("count", request.numberOfQuestions()))
                 .call()
@@ -99,19 +99,20 @@ public class AiGenerateServiceImpl implements AiGenerateService {
     private List<String> getModelChain(String provider, String startLevel) {
         Map<String, String> levels = new LinkedHashMap<>();
         if (provider.equals("groq")) {
-            levels.put("ADVANCE", "llama-3.3-70b-versatile"); // Smartest
-            levels.put("HARD", "llama-3.1-8b-instant");       // Fast
-            levels.put("MID", "mixtral-8x7b-32768");           // Reliable
-            levels.put("LOW", "gemma2-9b-it");                 // Light
+            levels.put("ADVANCE", "llama-3.3-70b-versatile");
+            levels.put("HARD", "llama-3.1-8b-instant");
+            levels.put("MID", "llama-3.1-70b-versatile");
+            levels.put("LOW", "llama-3.2-3b-preview");
         } else if (provider.equals("openai")) {
-            levels.put("ADVANCE", "gpt-4o");
-            levels.put("HARD", "gpt-4o-mini");
+            levels.put("ADVANCE", "o1-preview");
+            levels.put("HARD", "gpt-4o");
+            levels.put("MID", "gpt-4o-mini");
+            levels.put("LOW", "gpt-3.5-turbo");
         } else {
             levels.put("ADVANCE", "gemini-3-flash-preview");
             levels.put("HARD", "gemini-2.5-flash");
             levels.put("MID", "gemini-2.5-flash-lite");
             levels.put("LOW", "gemma-3-27b-it");
-            levels.put("VERY_LOW", "gemma-3-12b-it");
         }
 
         List<String> keys = new ArrayList<>(levels.keySet());
@@ -162,8 +163,8 @@ public class AiGenerateServiceImpl implements AiGenerateService {
                 .user(u -> u
                         .text(instructions)
                         .param("prompt", request.prompt())
-                        .param("title", request.surveyTitle())
-                        .param("type", request.surveyType())
+                        .param("title", request.surveyTitle() != null ? request.surveyTitle() : "Untitled Survey")
+                        .param("type", request.surveyType() != null ? request.surveyType() : "General")
                         .param("count", request.numberOfQuestions())
                         .media(media) // <--- This attaches the Image or Audio
                 )
