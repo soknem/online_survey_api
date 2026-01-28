@@ -67,7 +67,7 @@ public class SurveyController {
     }
 
     @GetMapping("/share/{slug}")
-    @PreAuthorize("hasRole('USER')")
+    //@PreAuthorize("hasRole('USER')")
     public SurveyPublicResponse getPublicShareSurvey(@PathVariable String slug) {
         return surveyService.getShareSurvey(slug);
     }
