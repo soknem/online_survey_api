@@ -7,11 +7,14 @@ import com.setec.online_survey.features.reponse.dto.SubmissionAnswerResponse;
 import com.setec.online_survey.features.reponse.dto.SubmissionRequest;
 import com.setec.online_survey.features.reponse.dto.SubmissionResponse;
 import com.setec.online_survey.features.survey.SurveyRepository;
+import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.mapper.QuestionMapper;
+import com.setec.online_survey.security.CustomUserDetails;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -34,6 +37,7 @@ public class ResponseServiceImpl implements ResponseService {
     private final QuestionMapper  questionMapper;
     private final ResponseRepository sessionRepository;
     private final HttpServletRequest request;
+    private final UserRepository userRepository;
 
     @Override
     public SubmissionResponse getSubmissionByShareSlug(String shareSlug) {
@@ -59,20 +63,35 @@ public class ResponseServiceImpl implements ResponseService {
 
 
     @Override
-    public void submitSurvey(SubmissionRequest submissionRequest) {
-        // 1. Get Client IP (for the ip_address column in your schema)
-        String clientIp = getClientIp(request);
+    public void submitSurvey(SubmissionRequest submissionRequest, Authentication authentication) {
 
-        // 2. Validate "One Person Per Survey" constraint
-        validateOnePersonPerSurvey(submissionRequest, clientIp);
-
-        // 3. Find Survey
+        // 1. Find Survey
         Survey survey = surveyRepository.findSurveyByUuid(submissionRequest.surveyUuid())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("Survey = %s has not been found",submissionRequest.surveyUuid())));
+
+        User user=null;
+        SurveyType surveyType =survey.getSurveyType();
+
+            if(surveyType==SurveyType.AUTHENTICATION){
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            String email = userDetails==null? null:userDetails.getUsername();
+
+            user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(email).orElseThrow(()->
+                    new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized"));
+        }
+
+        // 2. Get Client IP (for the ip_address column in your schema)
+        String clientIp = getClientIp(request);
+
+        // 3. Validate "One Person Per Survey" constraint
+        //validateOnePersonPerSurvey(submissionRequest, clientIp,surveyType);
+
 
         // 4. Create and Populate Session
         ResponseSession session = new ResponseSession();
         session.setSurvey(survey);
+        session.setRespondent(user);
         session.setStartTime(submissionRequest.startTime());
         session.setSubmitTime(LocalDateTime.now());
         session.setIpAddress(clientIp);
@@ -80,7 +99,6 @@ public class ResponseServiceImpl implements ResponseService {
         session.setBrowserUuid(submissionRequest.browserUuid());
         session.setUserAgent(request.getHeader("User-Agent"));
 
-        // Note: respondent_id remains null for anonymous users
 
         // 5. Map Answers
 //        Set<Answer> answers = submissionRequest.answers().stream().map(ansDto -> {
@@ -105,7 +123,7 @@ public class ResponseServiceImpl implements ResponseService {
         sessionRepository.save(session);
     }
 
-    private void validateOnePersonPerSurvey(SubmissionRequest request, String ip) {
+    private void validateOnePersonPerSurvey(SubmissionRequest request, String ip,SurveyType surveyType) {
         // Check Hardware Fingerprint
         if (sessionRepository.existsBySurveyUuidAndFingerprint(request.surveyUuid(), request.fingerprint())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Multiple submissions detected (Device Fingerprint)");

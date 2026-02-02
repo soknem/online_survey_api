@@ -1,5 +1,6 @@
 package com.setec.online_survey.config;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -15,6 +16,13 @@ public class GroqConfig {
 
     @Value("${ai.groq.base-url}")
     private String groqBaseUrl;
+
+    // Inside GroqConfig.java
+    @Bean
+    public ChatClient groqChatClient(OpenAiChatModel groqChatModel) {
+        // We create a client specifically bound to your Groq model
+        return ChatClient.builder(groqChatModel).build();
+    }
 
     @Bean
     public OpenAiChatModel groqChatModel() {
