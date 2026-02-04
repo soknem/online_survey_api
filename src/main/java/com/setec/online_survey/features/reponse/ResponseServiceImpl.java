@@ -34,7 +34,7 @@ public class ResponseServiceImpl implements ResponseService {
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
     private final ResponseRepository repository;
-    private final QuestionMapper  questionMapper;
+    private final QuestionMapper questionMapper;
     private final ResponseRepository sessionRepository;
     private final HttpServletRequest request;
     private final UserRepository userRepository;
@@ -67,26 +67,27 @@ public class ResponseServiceImpl implements ResponseService {
 
         // 1. Find Survey
         Survey survey = surveyRepository.findSurveyByUuid(submissionRequest.surveyUuid())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,String.format("Survey = %s has not been found",submissionRequest.surveyUuid())));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Survey = %s has not been found", submissionRequest.surveyUuid())));
 
-        User user=null;
-        SurveyType surveyType =survey.getSurveyType();
+        SurveyType surveyType = survey.getSurveyType();
+        User user = null;
+        boolean isAuth= surveyType != SurveyType.ANONYMOUS;
 
-            if(surveyType==SurveyType.AUTHENTICATION){
+        if (isAuth) {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            if (userDetails == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized");
+            }
 
-            String email = userDetails==null? null:userDetails.getUsername();
-
-            user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(email).orElseThrow(()->
-                    new ResponseStatusException(HttpStatus.UNAUTHORIZED,"User unauthorized"));
+            user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(userDetails.getUsername()).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized"));
         }
 
         // 2. Get Client IP (for the ip_address column in your schema)
         String clientIp = getClientIp(request);
 
         // 3. Validate "One Person Per Survey" constraint
-        //validateOnePersonPerSurvey(submissionRequest, clientIp,surveyType);
-
+        this.validatePersonBeAbleToSurvey(survey.getUuid(),isAuth, isAuth?user.getUuid():null, submissionRequest.fingerprint(), submissionRequest.browserUuid() );
 
         // 4. Create and Populate Session
         ResponseSession session = new ResponseSession();
@@ -101,46 +102,40 @@ public class ResponseServiceImpl implements ResponseService {
 
 
         // 5. Map Answers
-//        Set<Answer> answers = submissionRequest.answers().stream().map(ansDto -> {
-//            Answer answer = new Answer();
-//            answer.setSession(session);
-//            answer.setQuestion(questionRepository.findQuestionByUuid(ansDto.questionUuid())
-//                    .orElseThrow(() -> new EntityNotFoundException("Question not found")));
+        Set<Answer> answers = submissionRequest.answers().stream().map(ansDto -> {
+            Answer answer = new Answer();
+            answer.setSession(session);
+            answer.setQuestion(questionRepository.findQuestionByUuid(ansDto.questionUuid())
+                    .orElseThrow(() -> new EntityNotFoundException("Question not found")));
 
-            // Handle multiple options (Checkbox) or single option (Radio)
-//            if (ansDto.optionUuid() != null && !ansDto.optionUuid().isEmpty()) {
-//                Set<Option> options = new HashSet<>(optionRepository.findAllByUuidIn(ansDto.optionUuid()));
-//                answer.setOption(options);
-          //  }
+         //Handle multiple options (Checkbox) or single option (Radio)
+            if (ansDto.optionUuid() != null && !ansDto.optionUuid().isEmpty()) {
+                Set<Option> options = new HashSet<>(optionRepository.findAllByUuidIn(ansDto.optionUuid()));
+                answer.setOption(options);
+          }
 
-           // answer.setAnswerText(ansDto.answerText());
-        //    return answer;
-      //  }).collect(Collectors.toSet());
+         answer.setAnswerText(ansDto.answerText());
+            return answer;
+          }).collect(Collectors.toSet());
 
-       // session.setAnswers(answers);
+         session.setAnswers(answers);
 
         // 6. Save (CascadeType.ALL will save answers automatically)
         sessionRepository.save(session);
     }
 
-    private void validateOnePersonPerSurvey(SubmissionRequest request, String ip,SurveyType surveyType) {
-        // Check Hardware Fingerprint
-        if (sessionRepository.existsBySurveyUuidAndFingerprint(request.surveyUuid(), request.fingerprint())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Multiple submissions detected (Device Fingerprint)");
-        }
+    @Override
+    public void validatePersonBeAbleToSurvey(String surveyUuid,boolean isAuth, String userUuid, String fingerPrint, String browserUuid) {
 
-        // Check LocalStorage UUID
-        if (sessionRepository.existsBySurveyUuidAndBrowserUuid(request.surveyUuid(), request.browserUuid())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Multiple submissions detected (Browser UUID)");
-        }
+        boolean check = sessionRepository.existsBySurveyLogic(surveyUuid, isAuth, userUuid, fingerPrint, browserUuid);
 
-        // Check IP Address (Existing constraint in your schema)
-//        if (sessionRepository.existsBySurveyUuidAndIpAddress(request.surveyUuid(), ip)) {
-//            throw new ResponseStatusException(HttpStatus.CONFLICT, "Multiple submissions detected (IP Address)");
-//        }
+        if (!check) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "this survey already submitted");
+        }
     }
 
-    private String getClientIp(HttpServletRequest request) {
+    @Override
+    public String getClientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader == null || xfHeader.isEmpty()) {
             return request.getRemoteAddr();

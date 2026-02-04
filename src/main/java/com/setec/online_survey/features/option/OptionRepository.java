@@ -11,4 +11,6 @@ public interface OptionRepository extends JpaRepository<Option,Long> {
     List<Option> findOptionByQuestionUuid(String uuid);
 
     Optional<Option> findOptionByUuid(String uuid);
+
+    List<Option> findAllByUuidIn(List<String> uuidList);
 }

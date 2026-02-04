@@ -1,6 +1,7 @@
 package com.setec.online_survey.features.survey;
 
 import com.setec.online_survey.base.BaseSpecification;
+import com.setec.online_survey.features.reponse.dto.SubmissionRequest;
 import com.setec.online_survey.features.survey.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -25,7 +26,7 @@ public interface SurveyService {
 
      SurveyShareResponse shareSurvey(SurveyShareRequest surveyShareRequest,String stg,String isNew);
 
-     SurveyPublicResponse getShareSurvey(String slug);
+     SurveyPublicResponse getShareSurvey(String slug, SubmissionRequest submissionRequest,Authentication authentication);
 
      Page<MySurveyResponse> getMySurvey(BaseSpecification.FilterDto filterBody, WebRequest request, String globalOperator, String sortBy, Sort.Direction orderBy, int pageNumber, int pageSize, Authentication authentication);
 

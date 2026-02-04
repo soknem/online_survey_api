@@ -5,6 +5,7 @@ import com.setec.online_survey.base.BaseSpecification;
 import com.setec.online_survey.features.question.QuestionService;
 import com.setec.online_survey.features.question.dto.QuestionRequest;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
+import com.setec.online_survey.features.reponse.dto.SubmissionRequest;
 import com.setec.online_survey.features.survey.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -66,10 +67,10 @@ public class SurveyController {
         return surveyService.shareSurvey(surveyShareRequest,stg,isNew);
     }
 
-    @GetMapping("/share/{slug}")
+    @PostMapping("/share/{slug}")
     //@PreAuthorize("hasRole('USER')")
-    public SurveyPublicResponse getPublicShareSurvey(@PathVariable String slug) {
-        return surveyService.getShareSurvey(slug);
+    public SurveyPublicResponse getPublicShareSurvey(@PathVariable String slug, @RequestBody SubmissionRequest submissionRequest,Authentication authentication) {
+        return surveyService.getShareSurvey(slug,submissionRequest,authentication);
     }
 
 

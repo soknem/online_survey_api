@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.Set;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -31,7 +34,7 @@ public class Answer extends Auditable<String>  {
     private String answerText;
 
     // NULL if text-based
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "answer_option_id")
-    private  Option option;
+    private Set<Option> option;
 }

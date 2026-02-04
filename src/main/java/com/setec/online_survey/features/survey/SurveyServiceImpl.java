@@ -3,6 +3,7 @@ package com.setec.online_survey.features.survey;
 import com.github.slugify.Slugify;
 import com.setec.online_survey.base.BaseSpecification;
 import com.setec.online_survey.domain.Survey;
+import com.setec.online_survey.domain.SurveyType;
 import com.setec.online_survey.domain.User;
 import com.setec.online_survey.features.qr_generate.QrGenerateService;
 import com.setec.online_survey.features.qr_generate.dto.QrCodeRequest;
@@ -11,12 +12,15 @@ import com.setec.online_survey.features.qr_generate.dto.QrGenerateResponse;
 import com.setec.online_survey.features.question.QuestionService;
 import com.setec.online_survey.features.question.dto.QuestionResponse;
 import com.setec.online_survey.features.qr_generate.dto.ShareRequest;
+import com.setec.online_survey.features.reponse.ResponseService;
+import com.setec.online_survey.features.reponse.dto.SubmissionRequest;
 import com.setec.online_survey.features.survey.dto.*;
 import com.setec.online_survey.features.user.UserRepository;
 import com.setec.online_survey.mapper.SurveyMapper;
 import com.setec.online_survey.security.CustomUserDetails;
 import com.setec.online_survey.util.SortUtils;
 import com.setec.online_survey.util.SpecUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -43,6 +47,7 @@ public class SurveyServiceImpl implements SurveyService {
     private final QrGenerateService qrGenerateService;
     private final BaseSpecification<Survey> baseSpecification;
     private final QuestionService questionService;
+    private final ResponseService responseService;
 
     //endpoint that handle manage medias
     @Value("${media.survey-share}")
@@ -176,12 +181,10 @@ public class SurveyServiceImpl implements SurveyService {
     }
 
     @Override
-    public SurveyPublicResponse getShareSurvey(String slug) {
+    public SurveyPublicResponse getShareSurvey(String slug, SubmissionRequest submissionRequest,Authentication authentication) {
 
         Survey survey = surveyRepository.findSurveyBySurveyUrl(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("surveyUrl = %s has not been found", slug)));
-
-        List<QuestionResponse> questions = questionService.getQuestionBySurveyUuid(survey.getUuid());
 
         if (!survey.getIsPublic()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("survey not found"));
@@ -189,6 +192,24 @@ public class SurveyServiceImpl implements SurveyService {
         if (survey.getIsClosed()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("survey has been closed"));
         }
+
+        User user = null;
+        boolean isAuth= survey.getSurveyType() != SurveyType.ANONYMOUS;
+
+        if (isAuth) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            if (userDetails == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized");
+            }
+
+            user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(userDetails.getUsername()).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized"));
+        }
+
+        // 3. Validate "One Person Per Survey" constraint
+        responseService.validatePersonBeAbleToSurvey(survey.getUuid(),isAuth, isAuth?user.getUuid():null, submissionRequest.fingerprint(), submissionRequest.browserUuid() );
+
+        List<QuestionResponse> questions = questionService.getQuestionBySurveyUuid(survey.getUuid());
 
         return surveyMapper.toSurveyPublicResponse(survey,questions);
     }

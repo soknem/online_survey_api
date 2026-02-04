@@ -117,7 +117,7 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain publicApiChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**","/api/v1/ai-generate/**","/api/v1/responses/submit")
+                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**","/api/v1/ai-generate/**","/api/v1/responses/submit","/api/v1/surveys/share/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -138,8 +138,8 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() //
-                        .requestMatchers(HttpMethod.GET, "/api/v1/surveys/share/**").permitAll() //
-                        .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail","/api/v1/users/me","/api/v1/ai-generate/**","/api/v1/responses/submit").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/surveys/share/**").permitAll() //
+                        .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail","/api/v1/users/me","/api/v1/ai-generate/**","/api/v1/responses/submit","/api/v1/surveys/share/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
