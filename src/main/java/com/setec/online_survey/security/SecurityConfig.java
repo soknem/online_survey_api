@@ -117,7 +117,7 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain publicApiChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**","/api/v1/ai-generate/**")
+                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**","/api/v1/ai-generate/**","/api/v1/responses/**it")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
