@@ -117,11 +117,18 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain publicApiChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/v1/auth/**", "/api/v1/test/**","/api/v1/ai-generate/**","/api/v1/responses/**")
+                .securityMatcher("/api/v1/auth/**","/api/v1/test","/api/v1/ai-generate/**","/api/v1/responses/share/{slug}")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, ex1) -> {
+                            res.setStatus(401);
+                            res.setContentType("application/json");
+                            res.getWriter().write("{\"error\": \"Unauthorized Order1\"}");
+                        })
+                );;
 
         return http.build();
     }
@@ -139,7 +146,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() //
 //                        .requestMatchers(HttpMethod.POST, "/api/v1/responses/share/**").permitAll() //
-                        .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/test/send-mail","/api/v1/users/me","/api/v1/ai-generate/**","/api/v1/responses/share/**").permitAll()
+//                        .requestMatchers("/api/v1/auth/**","/api/v1/auth/logout","/api/v1/users/me","/api/v1/responses/share/{slug}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -147,7 +154,7 @@ public class SecurityConfig {
                                 (request, response, authException) -> {
                                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access\"}}";
+                                    String json = "{\"error\": {\"code\": \"401\", \"description\": \"Unauthorized access Order2\"}}";
                                     response.getWriter().write(json);
                                 },
                                 // This Lambda replaces AntPathRequestMatcher
@@ -180,7 +187,7 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .securityMatcher("/", "/login/**", "/oauth2/**", "/error", "/favicon.ico")
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth -> oauth
                         .authorizationEndpoint(auth -> auth

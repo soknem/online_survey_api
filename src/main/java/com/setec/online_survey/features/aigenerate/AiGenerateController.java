@@ -3,6 +3,10 @@ package com.setec.online_survey.features.aigenerate;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
 import com.setec.online_survey.features.aigenerate.dto.*;
+import com.setec.online_survey.features.reponse.ResponseService;
+import com.setec.online_survey.features.reponse.dto.SubmissionRequest;
+import com.setec.online_survey.features.survey.SurveyService;
+import com.setec.online_survey.features.survey.dto.SurveyPublicResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.google.genai.GoogleGenAiChatModel;
@@ -11,6 +15,7 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 // Import Flux from Project Reactor
@@ -29,6 +34,9 @@ public class AiGenerateController {
     private final AiGenerateService aiGenerateService;
     private final OpenAiChatModel groqChatModel;
     private final ChatClient chatClient;
+
+    private final ResponseService responseService;
+    private final SurveyService surveyService;
 
     @Qualifier("groqChatClient")
     private final ChatClient groqChatClient;

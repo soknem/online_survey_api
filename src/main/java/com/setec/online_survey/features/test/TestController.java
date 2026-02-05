@@ -6,7 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/v1/test")
+@RequestMapping("/api/v1/test")
 @RequiredArgsConstructor
 public class TestController {
 
@@ -29,8 +29,22 @@ public class TestController {
         return body;
     }
 
-    @GetMapping("/send-mail")
-    public void sendMail(@RequestParam String to, @RequestParam String subject, @RequestParam String content){
+    @GetMapping("/send")
+    public String send(){
         //sendMailService.sendMail(to,subject,content);
+
+        return "send";
+    }
+
+    @GetMapping("/send/1")
+    public String send1(){
+        //sendMailService.sendMail(to,subject,content);
+        return "send1";
+    }
+
+    @GetMapping("/send/{message}")
+    public String sendMessage(@PathVariable String message){
+        //sendMailService.sendMail(to,subject,content);
+        return "sendMessage";
     }
 }
