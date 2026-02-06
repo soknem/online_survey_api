@@ -19,6 +19,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 
@@ -56,7 +57,7 @@ public class SendMailServiceImpl implements SendMailService {
     @Override
     public void generateResetPasswordOtp(User user) {
 
-        LocalTime expiration = LocalTime.now().plusMinutes(1);
+        var expiration = LocalDateTime.now().plusMinutes(1);
         String token = (RandomUtil.generate6Digits());
 
         PasswordResetToken passwordResetToken = new PasswordResetToken();

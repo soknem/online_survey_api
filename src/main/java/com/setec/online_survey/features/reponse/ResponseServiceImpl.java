@@ -111,7 +111,7 @@ public class ResponseServiceImpl implements ResponseService {
          //Handle multiple options (Checkbox) or single option (Radio)
             if (ansDto.optionUuid() != null && !ansDto.optionUuid().isEmpty()) {
                 Set<Option> options = new HashSet<>(optionRepository.findAllByUuidIn(ansDto.optionUuid()));
-                answer.setOption(options);
+                answer.setOptions(options);
           }
 
          answer.setAnswerText(ansDto.answerText());

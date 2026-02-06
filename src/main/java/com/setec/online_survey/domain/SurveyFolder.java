@@ -1,23 +1,21 @@
 package com.setec.online_survey.domain;
 
-// ...
-import com.setec.online_survey.config.jpa.Auditable;
 import com.setec.online_survey.util.StringUuidConverter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Setter @Getter @NoArgsConstructor
 @Entity
-@Table(name = "options", indexes = {
-        @Index(name = "idx_option_uuid", columnList = "uuid", unique = true),
-        @Index(name = "idx_option_question_order", columnList = "question_id, orderIndex")
+@Table(name = "survey_folders", indexes = {
+        @Index(name = "idx_folder_uuid", columnList = "uuid", unique = true),
+        @Index(name = "idx_folder_owner", columnList = "user_id")
 })
-public class Option extends Auditable<String> {
+public class SurveyFolder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,14 +24,18 @@ public class Option extends Auditable<String> {
     @Column(name = "uuid", unique = true, nullable = false, columnDefinition = "RAW(16)")
     private String uuid;
 
-    private Integer orderIndex;
+    @Column(nullable = false, length = 100)
+    private String folderName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", nullable = false)
-    private Question question;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
-    @Column(nullable = false, length = 1000)
-    private String optionText;
+    @Enumerated(EnumType.STRING)
+    private FolderType folderType = FolderType.CUSTOM;
+
+    @OneToMany(mappedBy = "folder", fetch = FetchType.LAZY)
+    private List<Survey> surveys;
 
     @PrePersist
     public void ensureUuid() {

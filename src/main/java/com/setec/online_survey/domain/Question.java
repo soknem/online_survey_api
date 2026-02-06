@@ -2,6 +2,7 @@
 
     // ...
     import com.setec.online_survey.config.jpa.Auditable;
+    import com.setec.online_survey.util.StringUuidConverter;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.NotNull;
     import lombok.Getter;
@@ -10,18 +11,21 @@
 
     import java.util.HashSet;
     import java.util.Set;
+    import java.util.UUID;
 
-    @Setter
-    @Getter
-    @NoArgsConstructor
-    @Table(name = "questions")
+    @Setter @Getter @NoArgsConstructor
     @Entity
-    public class Question extends Auditable<String>  {
-
+    @Table(name = "questions", indexes = {
+            @Index(name = "idx_question_uuid", columnList = "uuid", unique = true),
+            @Index(name = "idx_question_survey_order", columnList = "survey_id, orderIndex")
+    })
+    public class Question extends Auditable<String> {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
+        @Convert(converter = StringUuidConverter.class)
+        @Column(name = "uuid", unique = true, nullable = false, columnDefinition = "RAW(16)")
         private String uuid;
 
         @ManyToOne(fetch = FetchType.LAZY)
@@ -36,19 +40,16 @@
         private QuestionType questionType = QuestionType.MULTIPLE_CHOICE;
 
         @Column(nullable = false)
-        @NotNull
         private Integer orderIndex;
 
-        @Column(nullable = false)
         private Boolean isRequired = false;
 
-        // ... relationships with Option and Answer
-        @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+        @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+        @OrderBy("orderIndex ASC")
         private Set<Option> options;
 
-        public void addOption(Option option) {
-            if (this.options == null) this.options = new HashSet<>();
-            this.options.add(option);
-            option.setQuestion(this);
+        @PrePersist
+        public void ensureUuid() {
+            if (this.uuid == null) this.uuid = UUID.randomUUID().toString();
         }
     }

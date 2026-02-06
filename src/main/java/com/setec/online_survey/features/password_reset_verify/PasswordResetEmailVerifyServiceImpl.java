@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
 
@@ -48,7 +49,7 @@ public class PasswordResetEmailVerifyServiceImpl implements PasswordResetEmailVe
 
     @Override
     public boolean isExpired(PasswordResetToken token) {
-        return !token.getExpiration().isBefore(LocalTime.now());
+        return !token.getExpiration().isBefore(LocalDateTime.now());
     }
 
 
@@ -73,7 +74,7 @@ public class PasswordResetEmailVerifyServiceImpl implements PasswordResetEmailVe
 
         // 4. Check expiration and complete verification
         if (this.isExpired(foundToken)) {
-            LocalTime expiration = LocalTime.now().plusMinutes(1);
+            var expiration = LocalDateTime.now().plusMinutes(1);
             foundToken.setExpiration(expiration);
             passwordResetEmailVerifyRepository.save(foundToken);
         }else{
