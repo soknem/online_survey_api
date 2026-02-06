@@ -96,6 +96,7 @@ public class SecurityConfig {
                 // This ensures the chain ONLY looks at OAuth2 Auth Server endpoints
                 .securityMatcher(authServerConfigurer.getEndpointsMatcher())
                 .cors(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .with(authServerConfigurer, (authorizationServer) ->
                         authorizationServer.oidc(Customizer.withDefaults())
                 )

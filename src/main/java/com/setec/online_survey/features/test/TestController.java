@@ -36,7 +36,8 @@ public class TestController {
         return "send";
     }
 
-    @GetMapping("/send/1")
+    @GetMapping("/send-auth")
+    @PreAuthorize("hasRole('USER')")
     public String send1(){
         //sendMailService.sendMail(to,subject,content);
         return "send1";
