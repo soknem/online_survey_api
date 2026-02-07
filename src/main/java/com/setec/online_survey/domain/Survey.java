@@ -52,7 +52,7 @@ public class Survey extends Auditable<String> {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private SurveyType surveyType = SurveyType.HYBRID;
+    private SurveyType surveyType = SurveyType.ANONYMOUS;
 
     private Integer maxResponses;
     private String image;

@@ -31,7 +31,7 @@ public class DataInit {
             adminUser.setLastName("Admin");
             adminUser.setFirstName("Super");
             adminUser.setEmailVerified(true);
-            adminUser.setRole(UserRole.ROLE_ADMIN); // Set a high privilege role
+            adminUser.setRole(UserRole.ROLE_USER); // Set a high privilege role
             
             // Set mandatory password (must be hashed!)
             adminUser.setPassword(passwordEncoder.encode("123456")); // <-- HASHED PASSWORD

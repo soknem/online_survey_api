@@ -127,9 +127,9 @@ public class ResponseServiceImpl implements ResponseService {
     @Override
     public void validatePersonBeAbleToSurvey(String surveyUuid,boolean isAuth, String userUuid, String fingerPrint, String browserUuid) {
 
-        boolean check = sessionRepository.existsBySurveyLogic(surveyUuid, isAuth, userUuid, fingerPrint, browserUuid);
+        boolean existed = sessionRepository.existsBySurveyLogic(surveyUuid, isAuth, userUuid, fingerPrint, browserUuid);
 
-        if (!check) {
+        if (existed) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "this survey already submitted");
         }
     }

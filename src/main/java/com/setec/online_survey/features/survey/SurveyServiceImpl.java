@@ -197,13 +197,10 @@ public class SurveyServiceImpl implements SurveyService {
         boolean isAuth= survey.getSurveyType() != SurveyType.ANONYMOUS;
 
         if (isAuth) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            if (userDetails == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized");
-            }
-
-            user = userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(userDetails.getUsername()).orElseThrow(() ->
-                    new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized"));
+            user = Optional.ofNullable(authentication)
+                    .map(auth -> (CustomUserDetails) auth.getPrincipal())
+                    .flatMap(details -> userRepository.findUserByEmailAndEmailVerifiedTrueAndIsAccountNonLockedTrue(details.getUsername()))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User unauthorized"));
         }
 
         // 3. Validate "One Person Per Survey" constraint

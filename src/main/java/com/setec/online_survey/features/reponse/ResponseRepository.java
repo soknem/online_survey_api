@@ -8,12 +8,12 @@ import org.springframework.data.repository.query.Param;
 public interface ResponseRepository extends JpaRepository<ResponseSession,Long> {
 
     @Query("""
-    SELECT COUNT(rs) > 0 
-    FROM ResponseSession rs 
-    WHERE rs.survey.uuid = :surveyUuid 
+    SELECT COUNT(rs) > 0
+    FROM ResponseSession rs
+    WHERE rs.survey.uuid = :surveyUuid
     AND (
         (:isAuthType = true AND rs.respondent.id = :userUuid)
-        OR 
+        OR
         (:isAuthType = false AND (rs.fingerprint = :fingerprint OR rs.browserUuid = :browserUuid))
     )
 """)
