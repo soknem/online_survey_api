@@ -83,7 +83,7 @@ public class QrGenerateImpl implements QrGenerateService {
             bodyBuilder.part("file", multipartFile.getResource());
 
             FileResponse fileResponse = restClient.post()
-                    .uri(fileServiceUrl+"/api/v1/files")
+                    .uri(fileServiceUrl+"/api/v1/files?type=QR")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(bodyBuilder.build())
                     .retrieve()
